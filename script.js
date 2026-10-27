@@ -9,41 +9,812 @@ const week = s => {const d=new Date(s+'T12:00:00Z');return dayAdd(s,-((d.getUTCD
 const label = s => new Date(s+'T12:00:00Z').toLocaleDateString('ru-RU',{weekday:'short',day:'numeric',month:'short',timeZone:'UTC'});
 const bishkekToday = () => new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bishkek',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const period = () => periods.find(p=>String(p.id)===$('#periodSelect').value);
-function days(p){let a=[];for(let d=p.start_date;d<=p.end_date;d=dayAdd(d,1))a.push(d);return a}
-function choice(uid,day){return prefs.find(x=>x.user_id===uid&&x.day===day)?.choice}
-function allows(c,s){return ({morning:['у'],evening:['в'],both:['у','в','у/в'],day:['д'],off:[]}[c]||[]).includes(s)}
-function eligible(uid,d,s,rows){if(!allows(choice(uid,d),s))return false; if(rows.some(x=>x.user_id===uid&&x.day===d))return false;let before=rows.find(x=>x.user_id===uid&&x.day===dayAdd(d,-1));let after=rows.find(x=>x.user_id===uid&&x.day===dayAdd(d,1));if(before&&['в','у/в'].includes(before.shift)&&['у','у/в'].includes(s))return false;if(after&&['в','у/в'].includes(s)&&['у','у/в'].includes(after.shift))return false;return rows.filter(x=>x.user_id===uid&&week(x.day)===week(d)).length<5}
-function coverage(rows,d){let x=rows.filter(r=>r.day===d);return {u:x.filter(r=>['у','у/в','д'].includes(r.shift)).length,v:x.filter(r=>['в','у/в','д'].includes(r.shift)).length}}
-function target(d){let k=new Date(d+'T12:00:00Z').getUTCDay();return {u:k===0||k===6?5:4,v:4}}
-function issues(rows){let all=[...assigned.filter(x=>!dates.includes(x.day)),...rows], problems=[];let missing=profiles.filter(p=>p.role==='staff' && dates.some(d=>!choice(p.id,d)));if(missing.length)problems.push('Не все дни заполнены: '+missing.map(p=>p.name).join(', '));for(let d of dates){let c=coverage(rows,d),t=target(d);if(c.u<t.u||c.v<t.v)problems.push(`${label(d)}: не хватает утром ${Math.max(0,t.u-c.u)}, вечером ${Math.max(0,t.v-c.v)}`)}for(let x of rows){let n=profiles.find(p=>p.id===x.user_id)?.name||'Сотрудник';if(!allows(choice(x.user_id,x.day),x.shift))problems.push(`${n}, ${label(x.day)}: смена не соответствует доступности`);let prev=all.find(a=>a.user_id===x.user_id&&a.day===dayAdd(x.day,-1));if(prev&&['в','у/в'].includes(prev.shift)&&['у','у/в'].includes(x.shift))problems.push(`${n}, ${label(x.day)}: недостаточно отдыха после вечерней смены`);if(all.filter(a=>a.user_id===x.user_id&&week(a.day)===week(x.day)).length>5)problems.push(`${n}, неделя с ${label(week(x.day))}: менее двух выходных`)}return [...new Set(problems)]}
-let availabilityDirty=false;function renderAvailability(){$('#availability').hidden=!(me?.role==='staff'&&period()?.requests_open);const el=$('#availabilityGrid'); if(!period()){el.innerHTML='<p>Администратор ещё не создал период.</p>';$('#saveAvailability').disabled=true;return}let locked=!period().requests_open && me.role!=='admin';let submitted=dates.length>0&&dates.every(d=>!!choice(me.id,d));availabilityDirty=false;$('#availabilityTitle').textContent=submitted?'Пожелания отправлены':'Отправить желаемый график';$('#requestStatus').textContent=period().requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.';$('#saveAvailability').disabled=locked;$('#saveAvailability').hidden=submitted||locked;el.innerHTML=dates.map(d=>{let c=choice(me.id,d);return `<div class="day" data-day="${d}"><strong>${label(d)}</strong>${[['m','Утро'],['v','Вечер'],['d','День']].map(([v,t])=>`<label><input type="checkbox" value="${v}" ${((v==='m'&&['morning','both'].includes(c))||(v==='v'&&['evening','both'].includes(c))||(v==='d'&&c==='day'))?'checked':''}>${t}</label>`).join('')}</div>`}).join('');el.querySelectorAll('input').forEach(input=>{ input.disabled=locked; input.addEventListener('change',()=>{availabilityDirty=true;$('#saveAvailability').hidden=false;if(!input.checked)return;let row=input.closest('.day');if(input.value==='d') row.querySelectorAll('input').forEach(i=>{if(i!==input)i.checked=false});else row.querySelectorAll('input').forEach(i=>{if(i.value==='d')i.checked=false})})})}
-function table(rows,editable=false){rows=rows.filter(x=>profiles.some(p=>p.id===x.user_id&&p.role==='staff'));if(!dates.length)return '<p>Период не выбран.</p>';return `<table><thead><tr><th>Сотрудник</th>${dates.map(d=>`<th>${label(d)}</th>`).join('')}<th>Смен</th><th>У/В</th></tr></thead><tbody>${profiles.filter(p=>p.role==='staff').map(p=>`<tr><td>${esc(p.name)}</td>${dates.map(d=>{let x=rows.find(a=>a.user_id===p.id&&a.day===d),s=x?.shift||'';return `<td>${editable?`<button class="shift" data-uid="${p.id}" data-day="${d}" title="Изменить смену">${s||'—'}</button>`:s?`<span class="shift-badge shift-${s==='у/в'?'full':s==='у'?'morning':s==='в'?'evening':'day'}">${esc(s.toUpperCase())}</span>`:'—'}</td>`}).join('')}<td>${rows.filter(a=>a.user_id===p.id).length}</td><td>${rows.filter(a=>a.user_id===p.id&&a.shift==='у/в').length}</td></tr>`).join('')}<tr><th>Утро</th>${dates.map(d=>`<td>${coverage(rows,d).u}/${target(d).u}</td>`).join('')}</tr><tr><th>Вечер</th>${dates.map(d=>`<td>${coverage(rows,d).v}/${target(d).v}</td>`).join('')}</tr></tbody></table>`}
-function renderDraft(){let warnings=issues(draft);$('#draftInfo').innerHTML=warnings.length?`<p class="warning">${warnings.map(esc).join('<br>')}</p>`:'<p>Предупреждений нет. Проверьте график перед публикацией.</p>';$('#draftGrid').innerHTML=table(draft,true);$('#draftGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{let old=draft.find(x=>x.user_id===b.dataset.uid&&x.day===b.dataset.day);let s=prompt('Введите у, в, у/в, д или оставьте пустым для выходного:',old?.shift||'');if(s===null)return;s=s.trim().toLowerCase();if(!['','у','в','у/в','д'].includes(s)){notice('Неизвестное обозначение смены.');return}draft=draft.filter(x=>!(x.user_id===b.dataset.uid&&x.day===b.dataset.day));if(s)draft.push({user_id:b.dataset.uid,day:b.dataset.day,shift:s});draftDirty=true;renderDraft()})}
-async function refresh(){profiles=check(await db.from('profiles').select('*').order('name'));periods=check(await db.from('periods').select('*').order('start_date',{ascending:false}));let current=$('#periodSelect').value;$('#periodSelect').innerHTML=periods.map(p=>`<option value="${p.id}">${esc(p.name)} (${p.start_date} — ${p.end_date})</option>`).join('');if(periods.some(p=>String(p.id)===current))$('#periodSelect').value=current;await loadPeriod()}
-async function loadPeriod(){let p=period();draft=[];draftDirty=false;draftExists=false;$('#draftGrid').innerHTML='';$('#draftInfo').innerHTML='';if(!p){dates=[];renderAvailability();$('#scheduleGrid').innerHTML='';$('#mySchedule').innerHTML='<p>Период не выбран.</p>';return}dates=days(p);prefs=check(await db.from('availability').select('*').eq('period_id',p.id));versions=check(await db.from('schedule_versions').select('*').order('id',{ascending:false}));let allRows=check(await db.from('assignments').select('*').gte('day',dayAdd(p.start_date,-7)).lte('day',dayAdd(p.end_date,7)));let latest=new Map();versions.forEach(v=>{if(!latest.has(v.period_id))latest.set(v.period_id,v.id)});assigned=allRows.filter(x=>[...latest.values()].includes(x.version_id)).map(x=>({...x,period_id:versions.find(v=>v.id===x.version_id).period_id}));archiveRows=allRows;let pv=versions.filter(v=>v.period_id===p.id);$('#versionLabel').hidden=me.role!=='admin'||!pv.length;$('#versionSelect').innerHTML=pv.map((v,i)=>`<option value="${v.id}">${i===0?'Актуальная — ':''}${new Date(v.created_at).toLocaleString('ru-RU')}</option>`).join('');renderAvailability();renderSchedule();renderRequestState();await renderToday();if(me.role==='admin'){let saved=check(await db.from('schedule_drafts').select('*').eq('period_id',p.id).maybeSingle());if(saved){draft=saved.rows.filter(x=>profiles.some(p=>p.id===x.user_id&&p.role==='staff'));draftExists=true;renderDraft();}}}
-function renderRequestState(){let p=period();$('#adminRequestStatus').textContent=!p?'Выберите период.':p.requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.';$('#toggleRequests').textContent=p?.requests_open?'Закрыть сбор пожеланий':'Открыть сбор пожеланий';$('#toggleRequests').disabled=!p;}
-$('#toggleRequests').onclick=run(async()=>{let p=period();if(!p)return;check(await db.from('periods').update({requests_open:!p.requests_open}).eq('id',p.id));p.requests_open=!p.requests_open;renderRequestState();renderAvailability();notice(p.requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.');});
-async function renderToday(){const today=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bishkek',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());$('#todayDate').textContent=new Intl.DateTimeFormat('ru-RU',{timeZone:'Asia/Bishkek',weekday:'long',day:'numeric',month:'long'}).format(new Date());const p=periods.find(x=>x.start_date<=today&&x.end_date>=today);if(!p){$('#todayContent').innerHTML='<p class="today-empty">На сегодня период не создан.</p>';return}const vers=check(await db.from('schedule_versions').select('id').eq('period_id',p.id).order('id',{ascending:false}).limit(1));if(!vers.length){$('#todayContent').innerHTML='<p class="today-empty">График на сегодня ещё не опубликован.</p>';return}let rows=check(await db.from('assignments').select('*').eq('version_id',vers[0].id).eq('day',today));function names(shifts){let ids=new Set(rows.filter(x=>shifts.includes(x.shift)).map(x=>x.user_id));let out=profiles.filter(x=>x.role==='staff'&&ids.has(x.id)).map(x=>`<li>${esc(x.name)}</li>`);return out.length?'<ul>'+out.join('')+'</ul>':'<p class="today-empty">Нет назначений</p>'}let day=rows.some(x=>x.shift==='д');$('#todayContent').innerHTML=`<div class="today-columns"><div><h3>Утро</h3>${names(['у','у/в'])}</div><div><h3>Вечер</h3>${names(['в','у/в'])}</div></div>${day?`<div class="day-center"><h3>День</h3>${names(['д'])}</div>`:''}`;}
-function renderSchedule(){let id=Number($('#versionSelect').value);let latest=versions.find(v=>v.period_id===period()?.id);let chosen=me.role==='admin'&&id?versions.find(v=>v.id===id):latest;let rows=chosen?archiveRows.filter(x=>x.version_id===chosen.id):[];$('#publishedInfo').textContent=chosen?'Опубликован: '+new Date(chosen.created_at).toLocaleString('ru-RU'):'График ещё не опубликован.';$('#scheduleGrid').innerHTML=chosen?table(rows):'<p>График ещё не опубликован.</p>';let mine=latest?archiveRows.filter(x=>x.version_id===latest.id&&x.user_id===me.id).sort((a,b)=>a.day.localeCompare(b.day)):[];$('#mySchedule').innerHTML=!latest?'<p>График ещё не опубликован.</p>':'<div class="personal-grid">'+dates.map(d=>{let x=mine.find(r=>r.day===d);let today=bishkekToday();let isPast=d<today;let isToday=!!x&&d===today;let next=mine.find(r=>r.day>today);let isNext=!!x&&next?.day===d;let marker=isToday?'Сегодня':isNext?'Ближайшая':'';return `<div class="personal-day ${x?'has-shift':''} ${isPast?'is-past':''} ${isToday?'is-today':''} ${isNext?'is-next':''}" aria-label="${esc(label(d))}: ${x?esc(x.shift):'выходной'}${marker?', '+marker:''}"><span class="personal-date">${esc(label(d))}</span><strong>${x?esc(x.shift.toUpperCase()):'—'}</strong>${marker?`<span class="personal-marker">${marker}</span>`:''}</div>`}).join('')+'</div>';}
+
+function days(p){
+  let a=[];
+  for(let d=p.start_date;d<=p.end_date;d=dayAdd(d,1)) a.push(d);
+  return a;
+}
+
+function choice(uid,day){
+  return prefs.find(x=>x.user_id===uid&&x.day===day)?.choice;
+}
+
+function allows(c,s){
+  return ({
+    morning:['у'],
+    evening:['в'],
+    both:['у','в','у/в'],
+    day:['д'],
+    off:[]
+  }[c]||[]).includes(s);
+}
+
+function eligible(uid,d,s,rows){
+  if(!allows(choice(uid,d),s)) return false;
+  if(rows.some(x=>x.user_id===uid&&x.day===d)) return false;
+  return rows.filter(x=>x.user_id===uid&&week(x.day)===week(d)).length<5;
+}
+
+function coverage(rows,d){
+  let x=rows.filter(r=>r.day===d);
+  return {
+    u:x.filter(r=>['у','у/в','д'].includes(r.shift)).length,
+    v:x.filter(r=>['в','у/в','д'].includes(r.shift)).length
+  };
+}
+
+function target(d){
+  let k=new Date(d+'T12:00:00Z').getUTCDay();
+  return {u:k===0||k===6?5:4,v:4};
+}
+
+function issues(rows){
+  let all=[...assigned.filter(x=>!dates.includes(x.day)),...rows], problems=[];
+  let missing=profiles.filter(p=>p.role==='staff' && dates.some(d=>!choice(p.id,d)));
+
+  if(missing.length)
+    problems.push('Не все дни заполнены: '+missing.map(p=>p.name).join(', '));
+
+  for(let d of dates){
+    let c=coverage(rows,d),t=target(d);
+    if(c.u<t.u||c.v<t.v)
+      problems.push(`${label(d)}: не хватает утром ${Math.max(0,t.u-c.u)}, вечером ${Math.max(0,t.v-c.v)}`);
+  }
+
+  for(let x of rows){
+    let n=profiles.find(p=>p.id===x.user_id)?.name||'Сотрудник';
+
+    if(!allows(choice(x.user_id,x.day),x.shift))
+      problems.push(`${n}, ${label(x.day)}: смена не соответствует доступности`);
+
+    if(all.filter(a=>a.user_id===x.user_id&&week(a.day)===week(x.day)).length>5)
+      problems.push(`${n}, неделя с ${label(week(x.day))}: менее двух выходных`);
+  }
+
+  return [...new Set(problems)];
+}
+
+let availabilityDirty=false;
+
+function renderAvailability(){
+  $('#availability').hidden=!(me?.role==='staff'&&period()?.requests_open);
+  const el=$('#availabilityGrid');
+
+  if(!period()){
+    el.innerHTML='<p>Администратор ещё не создал период.</p>';
+    $('#saveAvailability').disabled=true;
+    return;
+  }
+
+  let locked=!period().requests_open && me.role!=='admin';
+  let submitted=dates.length>0&&dates.every(d=>!!choice(me.id,d));
+  availabilityDirty=false;
+
+  $('#availabilityTitle').textContent=submitted?'Пожелания отправлены':'Отправить желаемый график';
+  $('#requestStatus').textContent=period().requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.';
+  $('#saveAvailability').disabled=locked;
+  $('#saveAvailability').hidden=submitted||locked;
+
+  el.innerHTML=dates.map(d=>{
+    let c=choice(me.id,d);
+    return `<div class="day" data-day="${d}">
+      <strong>${label(d)}</strong>
+      ${[['m','Утро'],['v','Вечер'],['d','День']].map(([v,t])=>
+        `<label><input type="checkbox" value="${v}" ${(
+          (v==='m'&&['morning','both'].includes(c))||
+          (v==='v'&&['evening','both'].includes(c))||
+          (v==='d'&&c==='day')
+        )?'checked':''}>${t}</label>`
+      ).join('')}
+    </div>`;
+  }).join('');
+
+  el.querySelectorAll('input').forEach(input=>{
+    input.disabled=locked;
+
+    input.addEventListener('change',()=>{
+      availabilityDirty=true;
+      $('#saveAvailability').hidden=false;
+
+      if(!input.checked) return;
+
+      let row=input.closest('.day');
+
+      if(input.value==='d'){
+        row.querySelectorAll('input').forEach(i=>{
+          if(i!==input) i.checked=false;
+        });
+      }else{
+        row.querySelectorAll('input').forEach(i=>{
+          if(i.value==='d') i.checked=false;
+        });
+      }
+    });
+  });
+}
+
+function table(rows,editable=false){
+  rows=rows.filter(x=>profiles.some(p=>p.id===x.user_id&&p.role==='staff'));
+  if(!dates.length) return '<p>Период не выбран.</p>';
+
+  return `<table>
+    <thead>
+      <tr>
+        <th>Сотрудник</th>
+        ${dates.map(d=>`<th>${label(d)}</th>`).join('')}
+        <th>Смен</th>
+        <th>У/В</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${profiles.filter(p=>p.role==='staff').map(p=>`
+        <tr>
+          <td>${esc(p.name)}</td>
+          ${dates.map(d=>{
+            let x=rows.find(a=>a.user_id===p.id&&a.day===d),s=x?.shift||'';
+            return `<td>${
+              editable
+                ? `<button class="shift" data-uid="${p.id}" data-day="${d}" title="Изменить смену">${s||'—'}</button>`
+                : s
+                  ? `<span class="shift-badge shift-${s==='у/в'?'full':s==='у'?'morning':s==='в'?'evening':'day'}">${esc(s.toUpperCase())}</span>`
+                  : '—'
+            }</td>`;
+          }).join('')}
+          <td>${rows.filter(a=>a.user_id===p.id).length}</td>
+          <td>${rows.filter(a=>a.user_id===p.id&&a.shift==='у/в').length}</td>
+        </tr>
+      `).join('')}
+      <tr>
+        <th>Утро</th>
+        ${dates.map(d=>`<td>${coverage(rows,d).u}/${target(d).u}</td>`).join('')}
+      </tr>
+      <tr>
+        <th>Вечер</th>
+        ${dates.map(d=>`<td>${coverage(rows,d).v}/${target(d).v}</td>`).join('')}
+      </tr>
+    </tbody>
+  </table>`;
+}
+
+function renderDraft(){
+  let warnings=issues(draft);
+
+  $('#draftInfo').innerHTML=warnings.length
+    ? `<p class="warning">${warnings.map(esc).join('<br>')}</p>`
+    : '<p>Предупреждений нет. Проверьте график перед публикацией.</p>';
+
+  $('#draftGrid').innerHTML=table(draft,true);
+
+  $('#draftGrid').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    let old=draft.find(x=>x.user_id===b.dataset.uid&&x.day===b.dataset.day);
+    let s=prompt('Введите у, в, у/в, д или оставьте пустым для выходного:',old?.shift||'');
+
+    if(s===null) return;
+    s=s.trim().toLowerCase();
+
+    if(!['','у','в','у/в','д'].includes(s)){
+      notice('Неизвестное обозначение смены.');
+      return;
+    }
+
+    draft=draft.filter(x=>!(x.user_id===b.dataset.uid&&x.day===b.dataset.day));
+
+    if(s) draft.push({user_id:b.dataset.uid,day:b.dataset.day,shift:s});
+
+    draftDirty=true;
+    renderDraft();
+  });
+}
+
+async function refresh(){
+  profiles=check(await db.from('profiles').select('*').order('name'));
+  periods=check(await db.from('periods').select('*').order('start_date',{ascending:false}));
+
+  let current=$('#periodSelect').value;
+
+  $('#periodSelect').innerHTML=periods.map(p=>
+    `<option value="${p.id}">${esc(p.name)} (${p.start_date} — ${p.end_date})</option>`
+  ).join('');
+
+  if(periods.some(p=>String(p.id)===current))
+    $('#periodSelect').value=current;
+
+  await loadPeriod();
+}
+
+async function loadPeriod(){
+  let p=period();
+  draft=[];
+  draftDirty=false;
+  draftExists=false;
+  $('#draftGrid').innerHTML='';
+  $('#draftInfo').innerHTML='';
+
+  if(!p){
+    dates=[];
+    renderAvailability();
+    $('#scheduleGrid').innerHTML='';
+    $('#mySchedule').innerHTML='<p>Период не выбран.</p>';
+    return;
+  }
+
+  dates=days(p);
+  prefs=check(await db.from('availability').select('*').eq('period_id',p.id));
+  versions=check(await db.from('schedule_versions').select('*').order('id',{ascending:false}));
+
+  let allRows=check(
+    await db.from('assignments')
+      .select('*')
+      .gte('day',dayAdd(p.start_date,-7))
+      .lte('day',dayAdd(p.end_date,7))
+  );
+
+  let latest=new Map();
+
+  versions.forEach(v=>{
+    if(!latest.has(v.period_id)) latest.set(v.period_id,v.id);
+  });
+
+  assigned=allRows
+    .filter(x=>[...latest.values()].includes(x.version_id))
+    .map(x=>({
+      ...x,
+      period_id:versions.find(v=>v.id===x.version_id).period_id
+    }));
+
+  archiveRows=allRows;
+
+  let pv=versions.filter(v=>v.period_id===p.id);
+  $('#versionLabel').hidden=me.role!=='admin'||!pv.length;
+  $('#versionSelect').innerHTML=pv.map((v,i)=>
+    `<option value="${v.id}">${i===0?'Актуальная — ':''}${new Date(v.created_at).toLocaleString('ru-RU')}</option>`
+  ).join('');
+
+  renderAvailability();
+  renderSchedule();
+  renderRequestState();
+  await renderToday();
+
+  if(me.role==='admin'){
+    let saved=check(
+      await db.from('schedule_drafts')
+        .select('*')
+        .eq('period_id',p.id)
+        .maybeSingle()
+    );
+
+    if(saved){
+      draft=saved.rows.filter(x=>profiles.some(p=>p.id===x.user_id&&p.role==='staff'));
+      draftExists=true;
+      renderDraft();
+    }
+  }
+}
+
+function renderRequestState(){
+  let p=period();
+
+  $('#adminRequestStatus').textContent=!p
+    ? 'Выберите период.'
+    : p.requests_open
+      ? 'Сбор пожеланий открыт.'
+      : 'Сбор пожеланий закрыт.';
+
+  $('#toggleRequests').textContent=p?.requests_open
+    ? 'Закрыть сбор пожеланий'
+    : 'Открыть сбор пожеланий';
+
+  $('#toggleRequests').disabled=!p;
+}
+
+$('#toggleRequests').onclick=run(async()=>{
+  let p=period();
+  if(!p) return;
+
+  check(await db.from('periods').update({requests_open:!p.requests_open}).eq('id',p.id));
+  p.requests_open=!p.requests_open;
+
+  renderRequestState();
+  renderAvailability();
+  notice(p.requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.');
+});
+
+async function renderToday(){
+  const today=new Intl.DateTimeFormat('en-CA',{
+    timeZone:'Asia/Bishkek',year:'numeric',month:'2-digit',day:'2-digit'
+  }).format(new Date());
+
+  $('#todayDate').textContent=new Intl.DateTimeFormat('ru-RU',{
+    timeZone:'Asia/Bishkek',weekday:'long',day:'numeric',month:'long'
+  }).format(new Date());
+
+  const p=periods.find(x=>x.start_date<=today&&x.end_date>=today);
+
+  if(!p){
+    $('#todayContent').innerHTML='<p class="today-empty">На сегодня период не создан.</p>';
+    return;
+  }
+
+  const vers=check(
+    await db.from('schedule_versions')
+      .select('id')
+      .eq('period_id',p.id)
+      .order('id',{ascending:false})
+      .limit(1)
+  );
+
+  if(!vers.length){
+    $('#todayContent').innerHTML='<p class="today-empty">График на сегодня ещё не опубликован.</p>';
+    return;
+  }
+
+  let rows=check(
+    await db.from('assignments')
+      .select('*')
+      .eq('version_id',vers[0].id)
+      .eq('day',today)
+  );
+
+  function names(shifts){
+    let ids=new Set(rows.filter(x=>shifts.includes(x.shift)).map(x=>x.user_id));
+    let out=profiles
+      .filter(x=>x.role==='staff'&&ids.has(x.id))
+      .map(x=>`<li>${esc(x.name)}</li>`);
+
+    return out.length
+      ? '<ul>'+out.join('')+'</ul>'
+      : '<p class="today-empty">Нет назначений</p>';
+  }
+
+  let day=rows.some(x=>x.shift==='д');
+
+  $('#todayContent').innerHTML=`
+    <div class="today-columns">
+      <div><h3>Утро</h3>${names(['у','у/в'])}</div>
+      <div><h3>Вечер</h3>${names(['в','у/в'])}</div>
+    </div>
+    ${day?`<div class="day-center"><h3>День</h3>${names(['д'])}</div>`:''}
+  `;
+}
+
+function renderSchedule(){
+  let id=Number($('#versionSelect').value);
+  let latest=versions.find(v=>v.period_id===period()?.id);
+  let chosen=me.role==='admin'&&id
+    ? versions.find(v=>v.id===id)
+    : latest;
+
+  let rows=chosen?archiveRows.filter(x=>x.version_id===chosen.id):[];
+
+  $('#publishedInfo').textContent=chosen
+    ? 'Опубликован: '+new Date(chosen.created_at).toLocaleString('ru-RU')
+    : 'График ещё не опубликован.';
+
+  $('#scheduleGrid').innerHTML=chosen
+    ? table(rows)
+    : '<p>График ещё не опубликован.</p>';
+
+  let mine=latest
+    ? archiveRows.filter(x=>x.version_id===latest.id&&x.user_id===me.id)
+      .sort((a,b)=>a.day.localeCompare(b.day))
+    : [];
+
+  $('#mySchedule').innerHTML=!latest
+    ? '<p>График ещё не опубликован.</p>'
+    : '<div class="personal-grid">'+dates.map(d=>{
+        let x=mine.find(r=>r.day===d);
+        let today=bishkekToday();
+        let isPast=d<today;
+        let isToday=!!x&&d===today;
+        let next=mine.find(r=>r.day>today);
+        let isNext=!!x&&next?.day===d;
+        let marker=isToday?'Сегодня':isNext?'Ближайшая':'';
+
+        return `<div class="personal-day ${x?'has-shift':''} ${isPast?'is-past':''} ${isToday?'is-today':''} ${isNext?'is-next':''}"
+          aria-label="${esc(label(d))}: ${x?esc(x.shift):'выходной'}${marker?', '+marker:''}">
+          <span class="personal-date">${esc(label(d))}</span>
+          <strong>${x?esc(x.shift.toUpperCase()):'—'}</strong>
+          ${marker?`<span class="personal-marker">${marker}</span>`:''}
+        </div>`;
+      }).join('')+'</div>';
+}
+
 $('#versionSelect').onchange=renderSchedule;
-$('#editPublished').onclick=()=>{if(!period())return;if((draftDirty||draftExists)&&!confirm('Заменить текущий черновик копией опубликованного графика?'))return;draft=assigned.filter(x=>x.period_id===period().id&&profiles.some(p=>p.id===x.user_id&&p.role==='staff')).map(({user_id,day,shift})=>({user_id,day,shift}));if(!draft.length){notice('Сначала опубликуйте график или составьте новый.');return}draftDirty=true;renderDraft();notice('Актуальный график скопирован в черновик.');};
-async function init(){if(!config?.url?.startsWith('https://')||!config.anonKey||config.anonKey.startsWith('YOUR_')){notice('Сначала подключите Supabase: откройте инструкцию README и заполните config.js.');$('#loginForm button').disabled=true;return}db=window.supabase.createClient(config.url,config.anonKey);let {data}=await db.auth.getSession();if(data.session)await enter(data.session.user)}
-async function enter(user){me=check(await db.from('profiles').select('*').eq('id',user.id).maybeSingle());if(!me){await db.auth.signOut();throw Error('Заявка ещё не одобрена. Обратитесь к администратору.')}$('#login').hidden=true;$('#app').hidden=false;$('#account').textContent=me.name;$('#adminTab').hidden=me.role!=='admin';$('#myShiftsCard').hidden=me.role!=='staff';await refresh();if(me.role==='admin')await loadRegistrationRequests()}
-function run(fn){return async e=>{try{await fn(e)}catch(err){notice('Ошибка: '+(err.message||err));console.error(err)}}}
-$('#showRegister').onclick=()=>{$('#loginForm').hidden=true;$('#showRegister').hidden=true;$('#registerForm').hidden=false};
-$('#showLogin').onclick=()=>{$('#registerForm').hidden=true;$('#loginForm').hidden=false;$('#showRegister').hidden=false};
-$('#registerForm').onsubmit=run(async e=>{e.preventDefault();let name=$('#registerName').value.trim();if(name.length<2)throw Error('Введите имя и фамилию.');let result=await db.auth.signUp({email:$('#registerEmail').value.trim(),password:$('#registerPassword').value,options:{data:{name}}});check(result);if(result.data.session)await db.auth.signOut();$('#registerPassword').value='';$('#registerForm').hidden=true;$('#loginForm').hidden=false;$('#showRegister').hidden=false;notice('Заявка отправлена. Если требуется подтверждение почты, проверьте письмо. После этого дождитесь одобрения администратора.');});
-async function loadRegistrationRequests(){if(me?.role!=='admin')return;let requests=check(await db.from('registration_requests').select('*').order('created_at',{ascending:false}));let el=$('#registrationRequests');el.innerHTML=requests.length?requests.map(x=>`<div class="request-row"><div><strong>${esc(x.name)}</strong><p>${esc(x.email)}</p></div><label>Роль<select data-role="${x.user_id}"><option value="staff">Официант</option><option value="admin">Администратор</option></select></label><button data-approve="${x.user_id}">Одобрить</button></div>`).join(''):'<p>Новых заявок нет.</p>';el.querySelectorAll('[data-approve]').forEach(b=>b.onclick=run(async()=>{let role=el.querySelector(`[data-role="${b.dataset.approve}"]`).value;if(!confirm(role==='admin'?'Выдать этому пользователю полные права администратора?':'Одобрить заявку официанта?'))return;b.disabled=true;try{check(await db.rpc('approve_registration',{p_user:b.dataset.approve,p_role:role}));await loadRegistrationRequests();await refresh();notice('Заявка одобрена.')}finally{b.disabled=false}}));}
+
+$('#editPublished').onclick=()=>{
+  if(!period()) return;
+
+  if((draftDirty||draftExists)&&!confirm('Заменить текущий черновик копией опубликованного графика?'))
+    return;
+
+  draft=assigned
+    .filter(x=>x.period_id===period().id&&profiles.some(p=>p.id===x.user_id&&p.role==='staff'))
+    .map(({user_id,day,shift})=>({user_id,day,shift}));
+
+  if(!draft.length){
+    notice('Сначала опубликуйте график или составьте новый.');
+    return;
+  }
+
+  draftDirty=true;
+  renderDraft();
+  notice('Актуальный график скопирован в черновик.');
+};
+
+async function init(){
+  if(!config?.url?.startsWith('https://')||!config.anonKey||config.anonKey.startsWith('YOUR_')){
+    notice('Сначала подключите Supabase: откройте инструкцию README и заполните config.js.');
+    $('#loginForm button').disabled=true;
+    return;
+  }
+
+  db=window.supabase.createClient(config.url,config.anonKey);
+
+  let {data}=await db.auth.getSession();
+  if(data.session) await enter(data.session.user);
+}
+
+async function enter(user){
+  me=check(await db.from('profiles').select('*').eq('id',user.id).maybeSingle());
+
+  if(!me){
+    await db.auth.signOut();
+    throw Error('Заявка ещё не одобрена. Обратитесь к администратору.');
+  }
+
+  $('#login').hidden=true;
+  $('#app').hidden=false;
+  $('#account').textContent=me.name;
+  $('#adminTab').hidden=me.role!=='admin';
+  $('#myShiftsCard').hidden=me.role!=='staff';
+
+  await refresh();
+  if(me.role==='admin') await loadRegistrationRequests();
+}
+
+function run(fn){
+  return async e=>{
+    try{
+      await fn(e);
+    }catch(err){
+      notice('Ошибка: '+(err.message||err));
+      console.error(err);
+    }
+  };
+}
+
+$('#showRegister').onclick=()=>{
+  $('#loginForm').hidden=true;
+  $('#showRegister').hidden=true;
+  $('#registerForm').hidden=false;
+};
+
+$('#showLogin').onclick=()=>{
+  $('#registerForm').hidden=true;
+  $('#loginForm').hidden=false;
+  $('#showRegister').hidden=false;
+};
+
+$('#registerForm').onsubmit=run(async e=>{
+  e.preventDefault();
+
+  let name=$('#registerName').value.trim();
+  if(name.length<2) throw Error('Введите имя и фамилию.');
+
+  let result=await db.auth.signUp({
+    email:$('#registerEmail').value.trim(),
+    password:$('#registerPassword').value,
+    options:{data:{name}}
+  });
+
+  check(result);
+
+  if(result.data.session) await db.auth.signOut();
+
+  $('#registerPassword').value='';
+  $('#registerForm').hidden=true;
+  $('#loginForm').hidden=false;
+  $('#showRegister').hidden=false;
+
+  notice('Заявка отправлена. Если требуется подтверждение почты, проверьте письмо. После этого дождитесь одобрения администратора.');
+});
+
+async function loadRegistrationRequests(){
+  if(me?.role!=='admin') return;
+
+  let requests=check(
+    await db.from('registration_requests')
+      .select('*')
+      .order('created_at',{ascending:false})
+  );
+
+  let el=$('#registrationRequests');
+
+  el.innerHTML=requests.length
+    ? requests.map(x=>`
+      <div class="request-row">
+        <div>
+          <strong>${esc(x.name)}</strong>
+          <p>${esc(x.email)}</p>
+        </div>
+        <label>Роль
+          <select data-role="${x.user_id}">
+            <option value="staff">Официант</option>
+            <option value="admin">Администратор</option>
+          </select>
+        </label>
+        <button data-approve="${x.user_id}">Одобрить</button>
+      </div>
+    `).join('')
+    : '<p>Новых заявок нет.</p>';
+
+  el.querySelectorAll('[data-approve]').forEach(b=>b.onclick=run(async()=>{
+    let role=el.querySelector(`[data-role="${b.dataset.approve}"]`).value;
+
+    if(!confirm(
+      role==='admin'
+        ? 'Выдать этому пользователю полные права администратора?'
+        : 'Одобрить заявку официанта?'
+    )) return;
+
+    b.disabled=true;
+
+    try{
+      check(await db.rpc('approve_registration',{p_user:b.dataset.approve,p_role:role}));
+      await loadRegistrationRequests();
+      await refresh();
+      notice('Заявка одобрена.');
+    }finally{
+      b.disabled=false;
+    }
+  }));
+}
+
 $('#refreshRequests').onclick=run(loadRegistrationRequests);
-$('#loginForm').onsubmit=run(async e=>{e.preventDefault();let r=await db.auth.signInWithPassword({email:$('#email').value,password:$('#password').value});check(r);await enter(r.data.user)});
-$('#logout').onclick=run(async()=>{check(await db.auth.signOut());location.reload()});
-$('#dashboardButton').onclick=()=>{$('#dashboard').hidden=false;$('#admin').hidden=true};$('#adminTab').onclick=()=>{$('#dashboard').hidden=true;$('#admin').hidden=false};
-let selectedPeriod='';$('#periodSelect').addEventListener('focus',()=>{selectedPeriod=$('#periodSelect').value});$('#periodSelect').onchange=run(async()=>{if(draftDirty&&!confirm('Есть несохранённые правки черновика. Перейти без сохранения?')){$('#periodSelect').value=selectedPeriod;return}await loadPeriod();selectedPeriod=$('#periodSelect').value});window.addEventListener('beforeunload',e=>{if(draftDirty){e.preventDefault();e.returnValue=''}});
-$('#saveAvailability').onclick=run(async()=>{if(!confirm('Сохранить и отправить пожелания? Пустые дни будут выходными.'))return;let rows=[];document.querySelectorAll('.day').forEach(el=>{let v=[...el.querySelectorAll('input:checked')].map(i=>i.value);let c=v.includes('d')?'day':v.includes('m')&&v.includes('v')?'both':v.includes('m')?'morning':v.includes('v')?'evening':'off';if(c)rows.push({period_id:period().id,user_id:me.id,day:el.dataset.day,choice:c})});if(rows.every(x=>x.choice==='off')&&!confirm('Все дни оставлены пустыми и будут отмечены выходными. Сохранить?'))return;let button=$('#saveAvailability');button.disabled=true;let started=Date.now();try{check(await db.from('availability').upsert(rows,{onConflict:'period_id,user_id,day'}));prefs=check(await db.from('availability').select('*').eq('period_id',period().id));let remaining=Math.max(0,500-(Date.now()-started));if(remaining)await new Promise(resolve=>setTimeout(resolve,remaining));renderAvailability();document.querySelector('.availability-details').open=false;notice('Пожелания отправлены');}catch(err){button.disabled=false;throw err}});
-$('#periodForm').onsubmit=run(async e=>{e.preventDefault();if(draftDirty&&!confirm('Есть несохранённые правки черновика. Создать период без сохранения?'))return;let a=$('#start').value,b=$('#end').value;if(b<a||b>dayAdd(a,30))throw Error('Период должен быть от 1 до 31 дня.');let overlaps=periods.some(p=>a<=p.end_date&&b>=p.start_date);if(overlaps)throw Error('Периоды не должны пересекаться.');let x=check(await db.from('periods').insert({name:$('#periodName').value.trim(),start_date:a,end_date:b}).select().single());await refresh();$('#periodSelect').value=x.id;await loadPeriod();notice('Период создан.')});
-$('#generate').onclick=run(async()=>{if(!period())throw Error('Сначала создайте период.');if((draftDirty||draftExists)&&!confirm('Заменить текущий черновик новым?'))return;let boundary=assigned.filter(x=>!dates.includes(x.day));let best=[],bestScore=Infinity;for(let attempt=0;attempt<80;attempt++){let rows=[];for(let d of dates){let t=target(d);for(let s of ['у','в']){while(coverage(rows,d)[s==='у'?'u':'v']<t[s==='у'?'u':'v']){let pool=profiles.filter(p=>p.role==='staff'&&eligible(p.id,d,s,[...boundary,...rows])).sort((a,b)=>{let ca=rows.filter(x=>x.user_id===a.id).length,cb=rows.filter(x=>x.user_id===b.id).length;let fa=dates.filter(day=>allows(choice(a.id,day),s)).length,fb=dates.filter(day=>allows(choice(b.id,day),s)).length;return ca-cb||(fa-fb)||Math.random()-.5});if(!pool.length)break;rows.push({user_id:pool[0].id,day:d,shift:s})}}let c=coverage(rows,d);if(c.u<t.u||c.v<t.v){let ss=c.u<t.u&&c.v<t.v?['д','у/в']:[];for(let s of ss){while(coverage(rows,d).u<t.u&&coverage(rows,d).v<t.v){let p=profiles.find(p=>p.role==='staff'&&eligible(p.id,d,s,[...boundary,...rows]));if(!p)break;rows.push({user_id:p.id,day:d,shift:s})}}}}let score=dates.reduce((n,d)=>{let c=coverage(rows,d),t=target(d);return n+Math.max(0,t.u-c.u)+Math.max(0,t.v-c.v)},0)*100+rows.filter(x=>x.shift==='у/в').length;if(score<bestScore){bestScore=score;best=rows}}draft=best;draftDirty=true;renderDraft();notice('Черновик составлен. Проверьте его и исправьте при необходимости.')});
-$('#saveDraft').onclick=run(async()=>{if(!period())throw Error('Сначала выберите период.');check(await db.from('schedule_drafts').upsert({period_id:period().id,rows:draft,updated_at:new Date().toISOString()},{onConflict:'period_id'}));draftDirty=false;draftExists=true;notice('Черновик сохранён.');});
-$('#publish').onclick=run(async()=>{if(!period()||!draft.length)throw Error('Сначала составьте черновик.');let warnings=issues(draft);if(warnings.length&&!confirm(`Есть предупреждения (${warnings.length}). Всё равно опубликовать?`))return;if(!confirm('Опубликовать график для всех сотрудников?'))return;let p=period();check(await db.from('schedule_drafts').upsert({period_id:p.id,rows:draft,updated_at:new Date().toISOString()},{onConflict:'period_id'}));draftDirty=false;draftExists=true;check(await db.rpc('publish_schedule',{p_period_id:p.id,p_rows:draft.map(x=>({user_id:x.user_id,day:x.day,shift:x.shift}))}));draftDirty=false;await loadPeriod();notice('График опубликован. Сохранённый черновик остаётся доступен.');});
+
+$('#loginForm').onsubmit=run(async e=>{
+  e.preventDefault();
+
+  let r=await db.auth.signInWithPassword({
+    email:$('#email').value,
+    password:$('#password').value
+  });
+
+  check(r);
+  await enter(r.data.user);
+});
+
+$('#logout').onclick=run(async()=>{
+  check(await db.auth.signOut());
+  location.reload();
+});
+
+$('#dashboardButton').onclick=()=>{
+  $('#dashboard').hidden=false;
+  $('#admin').hidden=true;
+};
+
+$('#adminTab').onclick=()=>{
+  $('#dashboard').hidden=true;
+  $('#admin').hidden=false;
+};
+
+let selectedPeriod='';
+
+$('#periodSelect').addEventListener('focus',()=>{
+  selectedPeriod=$('#periodSelect').value;
+});
+
+$('#periodSelect').onchange=run(async()=>{
+  if(draftDirty&&!confirm('Есть несохранённые правки черновика. Перейти без сохранения?')){
+    $('#periodSelect').value=selectedPeriod;
+    return;
+  }
+
+  await loadPeriod();
+  selectedPeriod=$('#periodSelect').value;
+});
+
+window.addEventListener('beforeunload',e=>{
+  if(draftDirty){
+    e.preventDefault();
+    e.returnValue='';
+  }
+});
+
+$('#saveAvailability').onclick=run(async()=>{
+  if(!confirm('Сохранить и отправить пожелания? Пустые дни будут выходными.')) return;
+
+  let rows=[];
+
+  document.querySelectorAll('.day').forEach(el=>{
+    let v=[...el.querySelectorAll('input:checked')].map(i=>i.value);
+
+    let c=v.includes('d')
+      ? 'day'
+      : v.includes('m')&&v.includes('v')
+        ? 'both'
+        : v.includes('m')
+          ? 'morning'
+          : v.includes('v')
+            ? 'evening'
+            : 'off';
+
+    if(c) rows.push({
+      period_id:period().id,
+      user_id:me.id,
+      day:el.dataset.day,
+      choice:c
+    });
+  });
+
+  if(rows.every(x=>x.choice==='off')&&!confirm('Все дни оставлены пустыми и будут отмечены выходными. Сохранить?'))
+    return;
+
+  let button=$('#saveAvailability');
+  button.disabled=true;
+  let started=Date.now();
+
+  try{
+    check(await db.from('availability').upsert(rows,{onConflict:'period_id,user_id,day'}));
+    prefs=check(await db.from('availability').select('*').eq('period_id',period().id));
+
+    let remaining=Math.max(0,500-(Date.now()-started));
+    if(remaining) await new Promise(resolve=>setTimeout(resolve,remaining));
+
+    renderAvailability();
+    document.querySelector('.availability-details').open=false;
+    notice('Пожелания отправлены');
+  }catch(err){
+    button.disabled=false;
+    throw err;
+  }
+});
+
+$('#periodForm').onsubmit=run(async e=>{
+  e.preventDefault();
+
+  if(draftDirty&&!confirm('Есть несохранённые правки черновика. Создать период без сохранения?'))
+    return;
+
+  let a=$('#start').value,b=$('#end').value;
+
+  if(b<a||b>dayAdd(a,30))
+    throw Error('Период должен быть от 1 до 31 дня.');
+
+  let overlaps=periods.some(p=>a<=p.end_date&&b>=p.start_date);
+  if(overlaps) throw Error('Периоды не должны пересекаться.');
+
+  let x=check(
+    await db.from('periods')
+      .insert({name:$('#periodName').value.trim(),start_date:a,end_date:b})
+      .select()
+      .single()
+  );
+
+  await refresh();
+  $('#periodSelect').value=x.id;
+  await loadPeriod();
+  notice('Период создан.');
+});
+
+$('#generate').onclick=run(async()=>{
+  if(!period()) throw Error('Сначала создайте период.');
+
+  if((draftDirty||draftExists)&&!confirm('Заменить текущий черновик новым?'))
+    return;
+
+  let boundary=assigned.filter(x=>!dates.includes(x.day));
+  let best=[],bestScore=Infinity;
+
+  for(let attempt=0;attempt<80;attempt++){
+    let rows=[];
+
+    for(let d of dates){
+      let t=target(d);
+
+      for(let s of ['у','в']){
+        while(coverage(rows,d)[s==='у'?'u':'v']<t[s==='у'?'u':'v']){
+          let pool=profiles
+            .filter(p=>p.role==='staff'&&eligible(p.id,d,s,[...boundary,...rows]))
+            .sort((a,b)=>{
+              let ca=rows.filter(x=>x.user_id===a.id).length;
+              let cb=rows.filter(x=>x.user_id===b.id).length;
+              let fa=dates.filter(day=>allows(choice(a.id,day),s)).length;
+              let fb=dates.filter(day=>allows(choice(b.id,day),s)).length;
+              return ca-cb||(fa-fb)||Math.random()-.5;
+            });
+
+          if(!pool.length) break;
+          rows.push({user_id:pool[0].id,day:d,shift:s});
+        }
+      }
+
+      let c=coverage(rows,d);
+
+      if(c.u<t.u||c.v<t.v){
+        let ss=c.u<t.u&&c.v<t.v?['д','у/в']:[];
+
+        for(let s of ss){
+          while(coverage(rows,d).u<t.u&&coverage(rows,d).v<t.v){
+            let p=profiles.find(p=>
+              p.role==='staff'&&eligible(p.id,d,s,[...boundary,...rows])
+            );
+
+            if(!p) break;
+            rows.push({user_id:p.id,day:d,shift:s});
+          }
+        }
+      }
+    }
+
+    let score=dates.reduce((n,d)=>{
+      let c=coverage(rows,d),t=target(d);
+      return n+Math.max(0,t.u-c.u)+Math.max(0,t.v-c.v);
+    },0)*100+rows.filter(x=>x.shift==='у/в').length;
+
+    if(score<bestScore){
+      bestScore=score;
+      best=rows;
+    }
+  }
+
+  draft=best;
+  draftDirty=true;
+  renderDraft();
+  notice('Черновик составлен. Проверьте его и исправьте при необходимости.');
+});
+
+$('#saveDraft').onclick=run(async()=>{
+  if(!period()) throw Error('Сначала выберите период.');
+
+  check(await db.from('schedule_drafts').upsert({
+    period_id:period().id,
+    rows:draft,
+    updated_at:new Date().toISOString()
+  },{onConflict:'period_id'}));
+
+  draftDirty=false;
+  draftExists=true;
+  notice('Черновик сохранён.');
+});
+
+$('#publish').onclick=run(async()=>{
+  if(!period()||!draft.length) throw Error('Сначала составьте черновик.');
+
+  let warnings=issues(draft);
+
+  if(warnings.length&&!confirm(`Есть предупреждения (${warnings.length}). Всё равно опубликовать?`))
+    return;
+
+  if(!confirm('Опубликовать график для всех сотрудников?')) return;
+
+  let p=period();
+
+  check(await db.from('schedule_drafts').upsert({
+    period_id:p.id,
+    rows:draft,
+    updated_at:new Date().toISOString()
+  },{onConflict:'period_id'}));
+
+  draftDirty=false;
+  draftExists=true;
+
+  check(await db.rpc('publish_schedule',{
+    p_period_id:p.id,
+    p_rows:draft.map(x=>({
+      user_id:x.user_id,
+      day:x.day,
+      shift:x.shift
+    }))
+  }));
+
+  draftDirty=false;
+  await loadPeriod();
+  notice('График опубликован. Сохранённый черновик остаётся доступен.');
+});
+
 init().catch(e=>notice('Ошибка: '+e.message));
 
 // При открытии пожеланий показываем начало формы
