@@ -33,3 +33,17 @@
 .request-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #e6ebe4}.request-row>div{flex:1 1 180px}.request-row p{margin:4px 0;font-size:13px;overflow-wrap:anywhere}.request-row label{min-width:145px;margin:0}#showRegister{margin-top:12px}#registerForm button{margin-top:8px}
 
 @media (min-width: 751px) { .dashboard-grid:has(.personal-card[hidden]) { grid-template-areas: "today schedule"; } }
+
+/* Закрепляем строку с датами в общем графике */
+.schedule-scroll thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: white;
+}
+
+/* Ячейка «Сотрудник» остаётся поверх строк и дат */
+.schedule-scroll thead th:first-child {
+  left: 0;
+  z-index: 3;
+}
