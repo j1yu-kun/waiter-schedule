@@ -298,12 +298,12 @@ function renderRequestState(){
   $('#adminRequestStatus').textContent=!p
     ? 'Выберите период.'
     : p.requests_open
-      ? 'Сбор пожеланий открыт.'
-      : 'Сбор пожеланий закрыт.';
+      ? 'Сбор заявок открыт.'
+      : 'Сбор заявок закрыт.';
 
   $('#toggleRequests').textContent=p?.requests_open
-    ? 'Закрыть сбор пожеланий'
-    : 'Открыть сбор пожеланий';
+    ? 'Закрыть сбор заявок'
+    : 'Открыть сбор заявок';
 
   $('#toggleRequests').disabled=!p;
 }
@@ -317,7 +317,7 @@ $('#toggleRequests').onclick=run(async()=>{
 
   renderRequestState();
   renderAvailability();
-  notice(p.requests_open?'Сбор пожеланий открыт.':'Сбор пожеланий закрыт.');
+  notice(p.requests_open?'Сбор заявок на смены открыт.':'Сбор заявок на смены закрыт.');
 });
 
 async function renderToday(){
@@ -624,7 +624,7 @@ window.addEventListener('beforeunload',e=>{
 });
 
 $('#saveAvailability').onclick=run(async()=>{
-  if(!confirm('Сохранить и отправить пожелания? Пустые дни будут выходными.')) return;
+  if(!confirm('Сохранить и отправить график? Пустые дни будут выходными.')) return;
 
   let rows=[];
 
