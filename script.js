@@ -45,3 +45,17 @@ $('#generate').onclick=run(async()=>{if(!period())throw Error('Сначала с
 $('#saveDraft').onclick=run(async()=>{if(!period())throw Error('Сначала выберите период.');check(await db.from('schedule_drafts').upsert({period_id:period().id,rows:draft,updated_at:new Date().toISOString()},{onConflict:'period_id'}));draftDirty=false;draftExists=true;notice('Черновик сохранён.');});
 $('#publish').onclick=run(async()=>{if(!period()||!draft.length)throw Error('Сначала составьте черновик.');let warnings=issues(draft);if(warnings.length&&!confirm(`Есть предупреждения (${warnings.length}). Всё равно опубликовать?`))return;if(!confirm('Опубликовать график для всех сотрудников?'))return;let p=period();check(await db.from('schedule_drafts').upsert({period_id:p.id,rows:draft,updated_at:new Date().toISOString()},{onConflict:'period_id'}));draftDirty=false;draftExists=true;check(await db.rpc('publish_schedule',{p_period_id:p.id,p_rows:draft.map(x=>({user_id:x.user_id,day:x.day,shift:x.shift}))}));draftDirty=false;await loadPeriod();notice('График опубликован. Сохранённый черновик остаётся доступен.');});
 init().catch(e=>notice('Ошибка: '+e.message));
+
+// При открытии пожеланий показываем начало формы
+const availabilityDetails = document.querySelector('.availability-details');
+
+availabilityDetails.addEventListener('toggle', () => {
+  if (!availabilityDetails.open) return;
+
+  requestAnimationFrame(() => {
+    availabilityDetails.scrollIntoView({
+      behavior: 'smooth',
+      block: 'start'
+    });
+  });
+});
