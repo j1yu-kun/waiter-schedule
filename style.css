@@ -25,16 +25,11 @@
 .personal-day.is-today{background:#dcf0df;border:2px solid #37754c}.personal-day.is-next{background:#fff3dc;border:2px solid #c99540}.personal-day.is-today strong,.personal-day.is-next strong{color:#243c2d;font-weight:800}.personal-marker{font-size:10px;font-weight:800;color:#49624f;line-height:1}.personal-day.is-next .personal-marker{color:#8c621f}@media(max-width:400px){.personal-marker{font-size:9px}.personal-day{gap:5px}}
 
 /* Ненавязчивый отклик и мягкое притягивание на мобильных */
-/*.toast{position:fixed;z-index:1000;bottom:24px;left:50%;transform:translateX(-50%);max-width:min(92vw,540px);padding:13px 18px;border-radius:12px;background:#263f32;color:white;box-shadow:0 8px 28px #12291e40;text-align:center;font-size:14px}button:disabled{opacity:.5;cursor:not-allowed}.availability-details[open] .details-action:after{content:'Свернуть'}@media(max-width:750px){html{scroll-snap-type:y proximity;scroll-padding-top:12px}.availability-card,.today-card,.schedule-card,.personal-card{scroll-snap-align:start}.availability-card:has(details[open]){scroll-snap-align:none}.toast{bottom:18px}}@media(prefers-reduced-motion:reduce){html{scroll-snap-type:none}}
+.toast{position:fixed;z-index:1000;bottom:24px;left:50%;transform:translateX(-50%);max-width:min(92vw,540px);padding:13px 18px;border-radius:12px;background:#263f32;color:white;box-shadow:0 8px 28px #12291e40;text-align:center;font-size:14px}button:disabled{opacity:.5;cursor:not-allowed}.availability-details[open] .details-action:after{content:'Свернуть'}@media(max-width:750px){.toast{bottom:18px}}
 
 .dashboard-grid{grid-template-columns:minmax(230px,1fr) minmax(0,2fr);grid-template-areas:'personal schedule' 'today schedule';gap:18px}.personal-card{grid-area:personal}.today-card{grid-area:today}.schedule-card{grid-area:schedule}.shift-badge{display:inline-block;padding:5px 9px;border-radius:7px;font-weight:800;color:#233b2c}.shift-morning{background:#fff0c1}.shift-evening{background:#dceafb}.shift-full{background:#d9ecda}.shift-day{background:#ffe1ca}@media(max-width:750px){.dashboard-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:'personal' 'today' 'schedule'}}
 
 @media(min-width:751px){.personal-grid{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))}}
 .request-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #e6ebe4}.request-row>div{flex:1 1 180px}.request-row p{margin:4px 0;font-size:13px;overflow-wrap:anywhere}.request-row label{min-width:145px;margin:0}#showRegister{margin-top:12px}#registerForm button{margin-top:8px}
 
-/* Если личная плитка скрыта, поднимаем блок команды */
-@media (min-width: 751px) {
-  .dashboard-grid:has(.personal-card[hidden]) {
-    grid-template-areas: "today schedule";
-  }
-}
+@media (min-width: 751px) { .dashboard-grid:has(.personal-card[hidden]) { grid-template-areas: "today schedule"; } }
