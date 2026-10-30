@@ -65,7 +65,7 @@ function issues(rows){
   for(let x of rows){
     let n=profiles.find(p=>p.id===x.user_id)?.name||'Сотрудник';
 
-    if(!allows(choice(x.user_id,x.day),x.shift))
+    if(choice(x.user_id,x.day) && !allows(choice(x.user_id,x.day),x.shift))
       problems.push(`${n}, ${label(x.day)}: смена не соответствует доступности`);
 
     if(all.filter(a=>a.user_id===x.user_id&&week(a.day)===week(x.day)).length>5)
