@@ -47,3 +47,49 @@
   left: 0;
   z-index: 3;
 }
+
+/* Таблица черновика прокручивается внутри своего блока */
+#draftGrid {
+  max-height: 65vh;
+  overflow: auto;
+}
+
+/* Даты закреплены сверху */
+#draftGrid thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: #fff;
+}
+
+/* Обе итоговые строки одинаковой высоты */
+#draftGrid tbody tr:nth-last-child(-n+2) th,
+#draftGrid tbody tr:nth-last-child(-n+2) td {
+  height: 48px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
+/* Вечер закреплён у нижнего края */
+#draftGrid tbody tr:last-child th,
+#draftGrid tbody tr:last-child td {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+}
+
+/* Утро закреплено над вечерней строкой */
+#draftGrid tbody tr:nth-last-child(2) th,
+#draftGrid tbody tr:nth-last-child(2) td {
+  position: sticky;
+  bottom: 48px;
+  z-index: 2;
+}
+
+/* Угол таблицы и названия итоговых строк */
+#draftGrid thead th:first-child,
+#draftGrid tbody tr:nth-last-child(2) th:first-child,
+#draftGrid tbody tr:last-child th:first-child {
+  left: 0;
+  z-index: 3;
+}
