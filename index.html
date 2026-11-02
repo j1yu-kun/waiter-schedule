@@ -1,124 +1,1245 @@
 <!doctype html>
 <html lang="ru">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Детский Сад</title>
-    <link rel="stylesheet" href="style.css">
-  </head>
-  <body>
-    <header>
-      <div class="brand">☕ <span>Бублик<small>10-й микрорайон</small></span> </div>
-      <div id="account"></div>
-    </header>
-    <main>
-      <div id="status" class="toast" role="status" aria-live="polite" hidden></div>
-      <section id="login" class="card narrow">
-        <span class="tag">ДОБРО ПОЖАЛОВАТЬ</span>
-        <h1>Планируем вместе</h1>
-        <p>Войдите, чтобы отметить доступные дни и посмотреть график.</p>
-        <form id="loginForm">
-          <label>Электронная почта<input id="email" type="email" required autocomplete="email"></label>
-          <label>Пароль<input id="password" type="password" required autocomplete="current-password" minlength="6"></label>
-          <button>Войти</button>
-        </form>
-        <button id="showRegister" type="button" class="secondary">Создать аккаунт</button>
-        <form id="registerForm" hidden>
-          <label>Имя и фамилия<input id="registerName" required minlength="2" maxlength="80" autocomplete="name"></label>
-          <label>Электронная почта<input id="registerEmail" type="email" required autocomplete="email"></label>
-          <label>Пароль<input id="registerPassword" type="password" required minlength="8" autocomplete="new-password"></label>
-          <button>Отправить заявку</button>
-          <button type="button" id="showLogin" class="secondary">Вернуться ко входу</button>
-        </form>
-        <p class="hint">После регистрации администратор подтвердит доступ.</p>
-      </section>
-      <div id="app" hidden><div class="hero"><div><span class="tag">ДЕТСКИЙ САД</span>
-        <h1>Внутренний портал</h1>
-        <p>Вся полезная информация в одном месте.</p>
-      </div>
-        <button id="logout" class="secondary">Выйти</button>
-      </div>
-        <label class="period-picker">Период <select id="periodSelect"></select></label>
-        <div class="toolbar">
-          <button id="dashboardButton" class="secondary">Главная</button>
-          <button id="adminTab" class="secondary" hidden>Админ панель</button>
-        </div>
-        <div id="dashboard">
-          <section id="availability" class="card availability-card" hidden>
-            <details class="availability-details">
-              <summary>
-                <span id="availabilityTitle">Отправить желаемый график</span>
-                <span class="details-action">Открыть форму</span>
-              </summary>
-              <p>Выберите дни смены. Если в какой-то день вы не можете работать, оставьте его пустым — он будет считаться выходным.</p>
-              <p>Утро и вечер вместе означают готовность к полному дню. Дневная смена выбирается отдельно.</p>
-              <p id="requestStatus" class="hint"></p>
-              <div id="availabilityGrid"></div>
-              <button id="saveAvailability">Отправить график</button>
-            </details>
-          </section>
-          <div class="dashboard-grid">
-            <section class="card today-card">
-              <span class="tag">КОМАНДА</span>
-              <h2>Сегодня на смене</h2>
-              <p id="todayDate"></p>
-              <div id="todayContent"></div>
-            </section>
-            <section id="schedule" class="card schedule-card">
-              <span class="tag">УТВЕРЖДЕННЫЙ</span>
-              <h2>График команды</h2>
-              <p id="publishedInfo">Утверждённый график на выбранный период.</p>
-              <label id="versionLabel" hidden>Версия графика <select id="versionSelect"></select></label>
-              <div class="schedule-scroll" id="scheduleGrid"></div>
-            </section>
-            <section id="myShiftsCard" class="card personal-card" hidden>
-              <span class="tag">Обзор</span>
-              <h2>Мои смены</h2>
-              <p>Смены на выбранный период</p>
-              <div id="mySchedule"></div>
-              <p class="hint">У — утро · В — вечер · Д — день · У/В — полный день · — выходной</p>
-            </section>
-          </div>
-        </div>
-        <section id="admin" hidden>
-          <div class="card">
-            <div class="row">
-              <div>
-                <h2>Заявки на регистрацию</h2>
-                <p>Проверьте имя и почту, затем выберите роль.</p>
-              </div>
-              <button id="refreshRequests" class="secondary">Обновить заявки</button>
-            </div>
-            <div id="registrationRequests"></div>
-          </div><div class="card">
-            <h2>Управление периодами</h2>
-            <p>Неделя считается с понедельника по воскресенье. В черновике не более 5 рабочих дней за неделю.</p>
-            <form id="periodForm" class="row">
-              <label>Название периода<input type="text" id="periodName" placeholder="Например, Ноябрь 1/2" maxlength="80" required></label>
-              <label>Начало<input type="date" id="start" required></label>
-              <label>Конец<input type="date" id="end" required></label>
-              <button>Создать период</button>
-            </form>
-            <p class="hint">Новый период автоматически станет выбранным. Перед расчётом проверьте доступность сотрудников.</p>
-          </div>
-          <div class="card">
-            <h2>Заявка на желаемый график</h2>
-            <p id="adminRequestStatus"></p>
-            <button id="toggleRequests" class="secondary">Открыть сбор заявок</button>
-          </div>
-          <div class="card">
-            <h2>Составить график</h2>
-            <p>Будни: 4 утро / 4 вечер. Выходные: 5 утро / 4 вечер. Алгоритм старается сократить полные дни и показывает нехватку.</p>
-            <div class="row">
-              <button id="generate">Составить черновик</button>
-              <button id="editPublished" class="secondary">Изменить актуальный график</button>
-              <button id="saveDraft" class="secondary">Сохранить черновик</button>
-              <button id="publish" class="secondary">Утвердить и опубликовать</button>
-            </div><div id="draftInfo"></div>
-            <div id="draftGrid" class="scroll"></div>
-            <p class="hint">Нажмите на ячейку, чтобы изменить смену. После правок нажмите «Сохранить черновик». Перед публикацией проверьте предупреждения.</p>
-          </div>
-        </section>
-      </div>
-    </main>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script><script src="script.js"></script></body></html>
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width,initial-scale=1" />
+		<title>Детский Сад</title>
+		<link rel="stylesheet" href="style.css" />
+	</head>
+	<body>
+		<header>
+			<div class="brand">
+				☕
+				<span>
+					Бублик
+					<small>10-й микрорайон</small>
+				</span>
+			</div>
+			<div id="account"></div>
+		</header>
+		<main>
+			<div id="status" class="toast" role="status" aria-live="polite" hidden=""></div>
+			<!-- Авторизация и регистрация. Доступ подтверждает администратор. -->
+			<section id="login" class="card narrow">
+				<span class="tag">ДОБРО ПОЖАЛОВАТЬ</span>
+				<h1>Планируем вместе</h1>
+				<p>Войдите, чтобы отметить доступные дни и посмотреть график.</p>
+				<form id="loginForm">
+					<label>
+						Электронная почта
+						<input id="email" type="email" required="" autocomplete="email" />
+					</label>
+					<label>
+						Пароль
+						<input
+							id="password"
+							type="password"
+							required=""
+							autocomplete="current-password"
+							minlength="6"
+						/>
+					</label>
+					<button>Войти</button>
+				</form>
+				<button id="showRegister" type="button" class="secondary">Создать аккаунт</button>
+				<form id="registerForm" hidden="">
+					<label>
+						Имя и фамилия
+						<input
+							id="registerName"
+							required=""
+							minlength="2"
+							maxlength="80"
+							autocomplete="name"
+						/>
+					</label>
+					<label>
+						Электронная почта
+						<input id="registerEmail" type="email" required="" autocomplete="email" />
+					</label>
+					<label>
+						Пароль
+						<input
+							id="registerPassword"
+							type="password"
+							required=""
+							minlength="8"
+							autocomplete="new-password"
+						/>
+					</label>
+					<button>Отправить заявку</button>
+					<button type="button" id="showLogin" class="secondary">
+						Вернуться ко входу
+					</button>
+				</form>
+				<p class="hint">После регистрации администратор подтвердит доступ.</p>
+			</section>
+			<!-- Рабочая область: выбор периода, главная и панель администратора. -->
+			<div id="app" hidden="">
+				<div class="hero">
+					<div>
+						<span class="tag">ДЕТСКИЙ САД</span>
+						<h1>Внутренний портал</h1>
+						<p>Вся полезная информация в одном месте.</p>
+					</div>
+					<button id="logout" class="secondary">Выйти</button>
+				</div>
+
+				<div class="toolbar main-tabs">
+					<button id="dashboardButton" class="secondary" aria-pressed="true">
+						Главная
+					</button>
+					<button id="adminTab" class="secondary" hidden="" aria-pressed="false">
+						Админ панель
+					</button>
+				</div>
+				<div id="dashboard">
+					<!-- Пожелания сотрудников на выбранный период. -->
+					<section id="availability" class="card availability-card" hidden="">
+						<details class="availability-details">
+							<summary>
+								<span id="availabilityTitle">Отправить желаемый график</span>
+								<span class="details-action">Открыть форму</span>
+							</summary>
+							<p>
+								Выберите дни смены. Если в какой-то день вы не можете работать,
+								оставьте его пустым — он будет считаться выходным.
+							</p>
+							<p>
+								Утро и вечер вместе означают готовность к полному дню. Дневная смена
+								выбирается отдельно.
+							</p>
+							<p id="requestStatus" class="hint"></p>
+							<div id="availabilityGrid"></div>
+							<button id="saveAvailability">Отправить график</button>
+						</details>
+					</section>
+					<div class="dashboard-grid">
+						<!-- Левая колонка: личный график, состав смены и задачи. -->
+						<div class="dashboard-left">
+							<section id="myShiftsCard" class="card personal-card" hidden="">
+								<span class="tag">Обзор</span>
+								<h2>Мои смены</h2>
+								<p>Смены на выбранный период</p>
+								<div id="mySchedule"></div>
+								<p class="hint">
+									У — утро · В — вечер · Д — день · У/В — полный день · — выходной
+								</p>
+							</section>
+							<section class="card today-card">
+								<span class="tag">КОМАНДА</span>
+								<h2>Сегодня на смене</h2>
+								<p id="todayDate"></p>
+								<div id="todayContent"></div>
+							</section>
+							<section id="tasksCard" class="card" hidden="">
+								<h2>Задачи на сегодня</h2>
+								<div id="taskList"></div>
+							</section>
+						</div>
+
+						<!-- Опубликованный график и переключение версий. -->
+						<section id="schedule" class="card schedule-card">
+							<span class="tag">УТВЕРЖДЕННЫЙ</span>
+							<h2>График команды</h2>
+							<div class="period-navigation">
+								<button
+									type="button"
+									class="secondary icon-button"
+									data-period-step="-1"
+									aria-label="Предыдущий период"
+								>
+									←
+								</button>
+								<div class="period-field">
+									<label class="period-picker">
+										Период
+										<select id="periodSelect"></select>
+									</label>
+								</div>
+								<button
+									type="button"
+									class="secondary icon-button"
+									data-period-step="1"
+									aria-label="Следующий период"
+								>
+									→
+								</button>
+							</div>
+							<p id="publishedInfo">Утверждённый график на выбранный период.</p>
+							<label id="versionLabel" hidden="">
+								Публикация внутри периода
+								<select id="versionSelect"></select>
+							</label>
+							<div class="schedule-scroll" id="scheduleGrid"></div>
+						</section>
+					</div>
+				</div>
+				<!-- Администрирование. Видимость интерфейса не заменяет серверные права RLS. -->
+				<section id="admin" hidden="">
+					<details class="accordion card" id="registrationPanel">
+						<summary>
+							Заявки на регистрацию
+							<span class="count-badge" id="registrationCount">0</span>
+						</summary>
+						<div class="accordion-body">
+							<div class="row">
+								<div>
+									<p>Проверьте имя и почту, затем выберите роль.</p>
+								</div>
+								<button id="refreshRequests" class="secondary">
+									Обновить заявки
+								</button>
+							</div>
+							<div id="registrationRequests"></div>
+						</div>
+					</details>
+					<nav class="admin-tabs" role="tablist" aria-label="Разделы админки">
+						<button
+							type="button"
+							id="tab-schedule"
+							role="tab"
+							aria-selected="true"
+							aria-controls="panel-schedule"
+							data-admin-tab="schedule"
+						>
+							График
+						</button>
+						<button
+							type="button"
+							id="tab-tasks"
+							role="tab"
+							aria-selected="false"
+							tabindex="-1"
+							aria-controls="panel-tasks"
+							data-admin-tab="tasks"
+						>
+							Задачи
+						</button>
+						<button
+							type="button"
+							id="tab-zones"
+							role="tab"
+							aria-selected="false"
+							tabindex="-1"
+							aria-controls="panel-zones"
+							data-admin-tab="zones"
+						>
+							Распределение зон
+						</button>
+					</nav>
+					<div class="admin-period-bar">
+						<label>
+							Рабочий период
+							<select id="adminPeriodSelect"></select>
+						</label>
+						<span class="hint">Изменения применяются к выбранному периоду</span>
+					</div>
+					<div id="panel-schedule" role="tabpanel" aria-labelledby="tab-schedule">
+						<details class="accordion card" id="periodManagement">
+							<summary>Управление периодами</summary>
+							<div class="accordion-body">
+								<p>
+									Неделя считается с понедельника по воскресенье. В черновике не
+									более 5 рабочих дней за неделю.
+								</p>
+								<form id="periodForm" class="row">
+									<label>
+										Название периода
+										<input
+											type="text"
+											id="periodName"
+											placeholder="Например, Ноябрь 1/2"
+											maxlength="80"
+											required=""
+										/>
+									</label>
+									<label>
+										Начало
+										<input type="date" id="start" required="" />
+									</label>
+									<label>
+										Конец
+										<input type="date" id="end" required="" />
+									</label>
+									<button>Создать период</button>
+								</form>
+								<p class="hint">
+									Новый период автоматически станет выбранным. Перед расчётом
+									проверьте доступность сотрудников.
+								</p>
+							</div>
+						</details>
+						<details class="accordion card" id="requestManagement">
+							<summary>Сбор пожеланий</summary>
+							<div class="accordion-body">
+								<p id="adminRequestStatus"></p>
+								<button id="toggleRequests" class="secondary">
+									Открыть сбор заявок
+								</button>
+							</div>
+						</details>
+						<div class="card">
+							<h2>Составить график</h2>
+							<p>
+								Будни: 4 утро / 4 вечер. Выходные: 5 утро / 4 вечер. Алгоритм
+								старается сократить полные дни и показывает нехватку.
+							</p>
+							<div class="row">
+								<button id="generate">Составить черновик</button>
+								<button id="editPublished" class="secondary">
+									Изменить актуальный график
+								</button>
+								<button id="saveDraft" class="secondary">Сохранить черновик</button>
+								<button id="publish" class="secondary">
+									Утвердить и опубликовать
+								</button>
+							</div>
+							<div id="publicationStatus" class="notice" hidden="" role="status">
+								<p id="publicationMessage"></p>
+								<button
+									type="button"
+									class="secondary"
+									id="retryPublication"
+									hidden=""
+								>
+									Повторить незавершённые этапы
+								</button>
+							</div>
+							<div id="draftInfo"></div>
+							<div id="draftGrid" class="scroll"></div>
+							<p class="hint">
+								Нажмите на ячейку, чтобы изменить смену. После правок нажмите
+								«Сохранить черновик». Перед публикацией проверьте предупреждения.
+							</p>
+						</div>
+					</div>
+					<div id="panel-tasks" role="tabpanel" aria-labelledby="tab-tasks" hidden="">
+						<details class="accordion card" id="catalogAccordion">
+							<summary>Справочник задач</summary>
+							<div class="accordion-body">
+								<section id="taskCatalog" class="">
+									<p>
+										Выберите дни отдельно для утра и вечера. Для назначения
+										новых задач нажмите «Распределить задачи» или опубликуйте
+										график.
+									</p>
+									<p>
+										Отключение убирает невыполненные назначения на сегодня и
+										будущие дни. Выполненные и прошедшие сохраняются.
+									</p>
+
+									<button id="newTemplate" type="button">Добавить задачу</button>
+									<div class="row">
+										<label>
+											Поиск
+											<input id="catalogSearch" type="search" />
+										</label>
+										<button type="button" id="refreshCatalog" class="secondary">
+											Обновить список
+										</button>
+									</div>
+									<div id="catalogList"></div>
+									<dialog
+										id="templateDialog"
+										aria-labelledby="templateDialogTitle"
+									>
+										<div class="dialog-heading">
+											<h2 id="templateDialogTitle">Новая задача</h2>
+											<button
+												type="button"
+												id="closeTemplateDialog"
+												class="secondary icon-button"
+												aria-label="Закрыть окно"
+											>
+												×
+											</button>
+										</div>
+										<p class="hint">
+											Выберите дни выполнения отдельно для утра и вечера.
+										</p>
+										<p
+											id="templateError"
+											class="form-error"
+											role="alert"
+											hidden=""
+										></p>
+										<form id="templateForm">
+											<label>
+												Название
+												<input
+													id="templateTitle"
+													maxlength="200"
+													required=""
+												/>
+											</label>
+											<fieldset>
+												<legend>Утро</legend>
+												<div class="weekday-grid">
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="1"
+															class="weekday-checkbox"
+														/>
+														Пн
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="2"
+															class="weekday-checkbox"
+														/>
+														Вт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="3"
+															class="weekday-checkbox"
+														/>
+														Ср
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="4"
+															class="weekday-checkbox"
+														/>
+														Чт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="5"
+															class="weekday-checkbox"
+														/>
+														Пт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="6"
+															class="weekday-checkbox"
+														/>
+														Сб
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="morning_days"
+															value="7"
+															class="weekday-checkbox"
+														/>
+														Вс
+													</label>
+												</div>
+												<button
+													type="button"
+													class="secondary"
+													data-all="morning_days"
+												>
+													Каждый день
+												</button>
+												<button
+													type="button"
+													class="secondary"
+													data-none="morning_days"
+												>
+													Ни одного
+												</button>
+											</fieldset>
+											<fieldset>
+												<legend>Вечер</legend>
+												<div class="weekday-grid">
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="1"
+															class="weekday-checkbox"
+														/>
+														Пн
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="2"
+															class="weekday-checkbox"
+														/>
+														Вт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="3"
+															class="weekday-checkbox"
+														/>
+														Ср
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="4"
+															class="weekday-checkbox"
+														/>
+														Чт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="5"
+															class="weekday-checkbox"
+														/>
+														Пт
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="6"
+															class="weekday-checkbox"
+														/>
+														Сб
+													</label>
+													<label>
+														<input
+															type="checkbox"
+															name="evening_days"
+															value="7"
+															class="weekday-checkbox"
+														/>
+														Вс
+													</label>
+												</div>
+												<button
+													type="button"
+													class="secondary"
+													data-all="evening_days"
+												>
+													Каждый день
+												</button>
+												<button
+													type="button"
+													class="secondary"
+													data-none="evening_days"
+												>
+													Ни одного
+												</button>
+											</fieldset>
+											<button type="submit" id="saveTemplate">
+												Добавить задачу
+											</button>
+											<button
+												type="button"
+												class="secondary"
+												id="cancelTemplate"
+											>
+												Отмена
+											</button>
+										</form>
+									</dialog>
+								</section>
+							</div>
+						</details>
+						<details class="accordion card" id="manualTasksAccordion">
+							<summary>Дополнительная задача</summary>
+							<div class="accordion-body">
+								<p>Назначьте разовую задачу сотруднику выбранной смены.</p>
+								<form id="taskForm" class="row">
+									<label>
+										Дата
+										<input type="date" id="taskDate" required="" />
+									</label>
+									<label>
+										Смена
+										<select id="taskShift">
+											<option value="morning">Утро</option>
+											<option value="evening">Вечер</option>
+										</select>
+									</label>
+									<label>
+										Сотрудник
+										<select id="taskUser" required=""></select>
+									</label>
+									<label>
+										Задача
+										<input id="taskTitle" maxlength="200" required="" />
+									</label>
+									<button>Добавить</button>
+								</form>
+							</div>
+						</details>
+						<details class="accordion card" id="historyAccordion" open="">
+							<summary>Назначения и история</summary>
+							<div class="accordion-body">
+								<section id="taskHistory" class="">
+									<button id="generateTasks" type="button" class="secondary">
+										Добавить задачи из справочника
+									</button>
+									<p class="hint">
+										При публикации задачи распределяются автоматически. Эта
+										кнопка добавляет недостающие назначения после изменения
+										справочника.
+									</p>
+
+									<p>
+										Назначения на выбранную дату: просмотр, фильтры и ручное
+										переназначение.
+									</p>
+
+									<div class="row">
+										<label>
+											Дата
+											<input type="date" data-h="date" />
+											<select data-h="period" hidden=""></select>
+										</label>
+
+										<label>
+											Сотрудник
+											<select data-h="person">
+												<option value="">Все</option>
+											</select>
+										</label>
+
+										<label>
+											Смена
+											<select data-h="shift">
+												<option value="">Все</option>
+												<option value="morning">Утро</option>
+												<option value="evening">Вечер</option>
+											</select>
+										</label>
+
+										<label>
+											Статус
+											<select data-h="status">
+												<option value="">Все</option>
+												<option value="done">Выполнено</option>
+												<option value="pending">Не выполнено</option>
+											</select>
+										</label>
+
+										<button type="button" class="secondary" data-h="refresh">
+											Обновить
+										</button>
+									</div>
+
+									<p data-h="message" role="status" aria-live="polite"></p>
+									<div data-h="list"></div>
+									<div id="adminTaskList"></div>
+								</section>
+							</div>
+						</details>
+					</div>
+					<div id="panel-zones" role="tabpanel" aria-labelledby="tab-zones" hidden="">
+						<section id="zoneSettings" class="card">
+							<h2>Зоны обслуживания</h2>
+							<p data-z-period=""></p>
+
+							<label class="switch-control">
+								<input
+									type="checkbox"
+									role="switch"
+									data-z-terrace=""
+									aria-labelledby="terraceLabel"
+								/>
+								<span class="switch-track" aria-hidden="true"></span>
+								<span id="terraceLabel">Летник выключен</span>
+							</label>
+
+							<p>
+								Зоны распределяются отдельно для утра и вечера. Дневной официант
+								учитывается в обеих сменах. При выключенном летнике пятый и шестой
+								сотрудники всё равно получают зоны летника.
+							</p>
+
+							<p data-z-status="" role="status" aria-live="polite"></p>
+							<details class="accordion" id="zoneSwapAccordion">
+								<summary>Ручной обмен зонами</summary>
+								<div class="accordion-body">
+									<div id="manualZoneSwap">
+										<div class="row">
+											<label>
+												Дата
+												<input type="date" data-zone-date="" />
+											</label>
+
+											<label>
+												Смена
+												<select data-zone-shift="">
+													<option value="morning">Утро</option>
+													<option value="evening">Вечер</option>
+												</select>
+											</label>
+
+											<button
+												type="button"
+												class="secondary"
+												data-zone-refresh=""
+											>
+												Обновить зоны
+											</button>
+										</div>
+
+										<p data-zone-period=""></p>
+
+										<div class="row">
+											<label>
+												Сотрудник
+												<select data-zone-person=""></select>
+											</label>
+
+											<label>
+												Новая зона
+												<select data-zone-target=""></select>
+											</label>
+
+											<button type="button" data-zone-save="" disabled="">
+												Сохранить
+											</button>
+										</div>
+
+										<p data-zone-preview=""></p>
+										<p
+											data-zone-message=""
+											role="status"
+											aria-live="polite"
+										></p>
+									</div>
+								</div>
+							</details>
+						</section>
+						<section id="zoneBrowser" class="card">
+							<div class="section-heading">
+								<div>
+									<span class="tag">НАЗНАЧЕНИЯ ПО ДАТАМ</span>
+									<h2>Календарь зон</h2>
+								</div>
+								<button type="button" class="secondary" id="refreshZoneCalendar">
+									Обновить
+								</button>
+							</div>
+							<div class="calendar-toolbar">
+								<button
+									type="button"
+									class="secondary icon-button"
+									data-zone-month="-1"
+									aria-label="Предыдущий месяц"
+								>
+									←
+								</button>
+								<strong id="zoneMonthTitle"></strong>
+								<button
+									type="button"
+									class="secondary icon-button"
+									data-zone-month="1"
+									aria-label="Следующий месяц"
+								>
+									→
+								</button>
+								<button type="button" class="secondary" id="zoneCalendarToday">
+									Сегодня
+								</button>
+							</div>
+							<label class="date-field">
+								Дата
+								<input type="date" id="zoneViewDate" />
+							</label>
+							<div class="calendar-weekdays" aria-hidden="true">
+								<span>Пн</span>
+								<span>Вт</span>
+								<span>Ср</span>
+								<span>Чт</span>
+								<span>Пт</span>
+								<span>Сб</span>
+								<span>Вс</span>
+							</div>
+							<div
+								id="zoneCalendar"
+								class="zone-calendar"
+								aria-label="Выбор даты"
+							></div>
+							<h3 id="zoneDateTitle"></h3>
+							<p id="zoneViewStatus" role="status"></p>
+							<div id="zoneDayRoster"></div>
+							<p class="hint">
+								Показаны сохранённые зоны последней публикации периода. Прошедшие
+								даты доступны для просмотра.
+							</p>
+						</section>
+					</div>
+				</section>
+			</div>
+		</main>
+		<!-- HTML-шаблоны динамических строк. {{имя}} — значение из renderTemplate; бизнес-логики здесь нет. -->
+		<!-- tpl-render-availability-p: render-availability; поля: нет. -->
+		<script type="text/html" id="tpl-render-availability-p">
+			<p>Администратор ещё не создал период.</p>
+		</script>
+		<!-- tpl-render-availability-label: render-availability; поля: shiftCode, checked, shiftLabel. -->
+		<script type="text/html" id="tpl-render-availability-label">
+			<label>
+				<input type="checkbox" value="{{shiftCode}}" {{checked}} />
+				{{shiftLabel}}
+			</label>
+		</script>
+		<!-- tpl-render-availability-div: render-availability; поля: date, dateLabel, choices. -->
+		<script type="text/html" id="tpl-render-availability-div">
+			<div class="day" data-day="{{date}}">
+				<strong>{{dateLabel}}</strong>
+				{{choices}}
+			</div>
+		</script>
+		<!-- tpl-table-p: table; поля: нет. -->
+		<script type="text/html" id="tpl-table-p">
+			<p>Период не выбран.</p>
+		</script>
+		<!-- tpl-table-th: table; поля: dateLabel. -->
+		<script type="text/html" id="tpl-table-th">
+			<th>{{dateLabel}}</th>
+		</script>
+		<!-- tpl-table-button: table; поля: userId, date, shiftLabel. -->
+		<script type="text/html" id="tpl-table-button">
+			<button class="shift" data-uid="{{userId}}" data-day="{{date}}" title="Изменить смену">
+				{{shiftLabel}}
+			</button>
+		</script>
+		<!-- tpl-table-span: table; поля: shiftClass, shiftLabel. -->
+		<script type="text/html" id="tpl-table-span">
+			<span class="shift-badge shift-{{shiftClass}}">{{shiftLabel}}</span>
+		</script>
+		<!-- tpl-table-td: table; поля: cell. -->
+		<script type="text/html" id="tpl-table-td">
+			<td>{{cell}}</td>
+		</script>
+		<!-- tpl-table-tr: table; поля: name, days, shiftCount, fullDayCount. -->
+		<script type="text/html" id="tpl-table-tr">
+			<tr>
+				<td>{{name}}</td>
+				{{days}}
+				<td>{{shiftCount}}</td>
+				<td>{{fullDayCount}}</td>
+			</tr>
+		</script>
+		<!-- tpl-table-td-2: table; поля: actual, required. -->
+		<script type="text/html" id="tpl-table-td-2">
+			<td>{{actual}}/{{required}}</td>
+		</script>
+		<!-- tpl-table-td-3: table; поля: actual, required. -->
+		<script type="text/html" id="tpl-table-td-3">
+			<td>{{actual}}/{{required}}</td>
+		</script>
+		<!-- tpl-table-table: table; поля: dates, employees, morningTotals, eveningTotals. -->
+		<script type="text/html" id="tpl-table-table">
+			<table>
+				<thead>
+					<tr>
+						<th>Сотрудник</th>
+						{{dates}}
+						<th>Смен</th>
+						<th>У/В</th>
+					</tr>
+				</thead>
+				<tbody>
+					{{employees}}
+					<tr>
+						<th>Утро</th>
+						{{morningTotals}}
+					</tr>
+					<tr>
+						<th>Вечер</th>
+						{{eveningTotals}}
+					</tr>
+				</tbody>
+			</table>
+		</script>
+		<!-- tpl-render-draft-br: render-draft; поля: нет. -->
+		<script type="text/html" id="tpl-render-draft-br">
+			<br />
+		</script>
+		<!-- tpl-render-draft-p: render-draft; поля: warnings. -->
+		<script type="text/html" id="tpl-render-draft-p">
+			<details class="accordion warning" data-disclosure="draft-warnings">
+				<summary>
+					Предупреждения
+					<span class="count-badge">{{count}}</span>
+				</summary>
+				<div class="accordion-body">{{warnings}}</div>
+			</details>
+		</script>
+		<!-- tpl-render-draft-p-2: render-draft; поля: нет. -->
+		<script type="text/html" id="tpl-render-draft-p-2">
+			<p>Предупреждений нет. Проверьте график перед публикацией.</p>
+		</script>
+		<!-- tpl-refresh-option: refresh; поля: periodId, name, startDate, endDate. -->
+		<script type="text/html" id="tpl-refresh-option">
+			<option value="{{periodId}}">{{name}} ({{startDate}} — {{endDate}})</option>
+		</script>
+		<!-- tpl-load-period-p: load-period; поля: нет. -->
+		<script type="text/html" id="tpl-load-period-p">
+			<p>Период не выбран.</p>
+		</script>
+		<!-- tpl-load-period-option: load-period; поля: versionId, prefix, publishedAt. -->
+		<script type="text/html" id="tpl-load-period-option">
+			<option value="{{versionId}}">{{prefix}}{{publishedAt}}</option>
+		</script>
+		<!-- tpl-render-schedule-p: render-schedule; поля: нет. -->
+		<script type="text/html" id="tpl-render-schedule-p">
+			<p>График ещё не опубликован.</p>
+		</script>
+		<!-- tpl-render-schedule-p-2: render-schedule; поля: нет. -->
+		<script type="text/html" id="tpl-render-schedule-p-2">
+			<p>График ещё не опубликован.</p>
+		</script>
+		<!-- tpl-render-schedule-span: render-schedule; поля: marker. -->
+		<script type="text/html" id="tpl-render-schedule-span">
+			<span class="personal-marker">{{marker}}</span>
+		</script>
+		<!-- tpl-render-schedule-div: render-schedule; поля: hasShift, isPast, isToday, isNext, dateLabel, shiftName, markerLabel, date, shift, marker. -->
+		<script type="text/html" id="tpl-render-schedule-div">
+			<div
+				class="personal-day {{hasShift}} {{isPast}} {{isToday}} {{isNext}}"
+				aria-label="{{dateLabel}}: {{shiftName}}{{markerLabel}}"
+			>
+				<span class="personal-date">{{date}}</span>
+				<strong>{{shift}}</strong>
+				{{marker}}
+			</div>
+		</script>
+		<!-- tpl-render-schedule-div-2: render-schedule; поля: days. -->
+		<script type="text/html" id="tpl-render-schedule-div-2">
+			<div class="personal-grid">{{days}}</div>
+		</script>
+		<!-- tpl-load-registration-requests-div: load-registration-requests; поля: name, email, roleUserId, approveUserId. -->
+		<script type="text/html" id="tpl-load-registration-requests-div">
+			<div class="request-row">
+				<div>
+					<strong>{{name}}</strong>
+					<p>{{email}}</p>
+				</div>
+				<label>
+					Роль
+					<select data-role="{{roleUserId}}">
+						<option value="staff">Официант</option>
+						<option value="admin">Администратор</option>
+					</select>
+				</label>
+				<button data-approve="{{approveUserId}}">Одобрить</button>
+			</div>
+		</script>
+		<!-- tpl-load-registration-requests-p: load-registration-requests; поля: нет. -->
+		<script type="text/html" id="tpl-load-registration-requests-p">
+			<p>Новых заявок нет.</p>
+		</script>
+		<!-- tpl-warning-html-option: warning-html; поля: userId, name. -->
+		<script type="text/html" id="tpl-warning-html-option">
+			<option value="{{userId}}">{{name}}</option>
+		</script>
+		<!-- tpl-warning-html-p: warning-html; поля: нет. -->
+		<script type="text/html" id="tpl-warning-html-p">
+			<p>На эту смену пока никто не назначен.</p>
+		</script>
+		<!-- tpl-warning-html-div: warning-html; поля: date, shift, title, name, selectTaskId, candidates, buttonTaskId, disabled, emptyMessage. -->
+		<script type="text/html" id="tpl-warning-html-div">
+			<div class="manual-task-warning">
+				<p>
+					{{date}} · {{shift}} ·
+					<strong>{{title}}</strong>
+					<br />
+					{{name}} больше не работает в эту смену.
+				</p>
+
+				<select data-reassign-select="{{selectTaskId}}">
+					<option value="">Выберите сотрудника</option>
+					{{candidates}}
+				</select>
+
+				<button
+					type="button"
+					class="secondary"
+					data-reassign-task="{{buttonTaskId}}"
+					{{disabled}}
+				>
+					Переназначить
+				</button>
+
+				{{emptyMessage}}
+			</div>
+		</script>
+		<!-- tpl-warning-html-div-2: warning-html; поля: count, tasks. -->
+		<script type="text/html" id="tpl-warning-html-div-2">
+			<div class="warning">
+				<strong>Нужно переназначить ручные задачи: {{count}}</strong>
+				{{tasks}}
+			</div>
+		</script>
+		<!-- tpl-task-list-html-p: task-list-html; поля: date, shift, name, title, done. -->
+		<script type="text/html" id="tpl-task-list-html-p">
+			<p>{{date}} · {{shift}} · {{name}} · {{title}} {{done}}</p>
+		</script>
+		<!-- tpl-load-tasks-p: load-tasks; поля: нет. -->
+		<script type="text/html" id="tpl-load-tasks-p">
+			<p>Задач пока нет.</p>
+		</script>
+		<!-- tpl-render-task-p: render-task; поля: title, employee, shiftName, status. -->
+		<script type="text/html" id="tpl-render-task-p">
+			<p>
+				<strong>{{title}}</strong>
+				<br />
+				{{employee}} · {{shiftName}}
+				<br />
+				<small>{{status}}</small>
+			</p>
+		</script>
+		<!-- tpl-load-tasks-p-2: load-tasks; поля: нет. -->
+		<script type="text/html" id="tpl-load-tasks-p-2">
+			<p>На сегодня задач пока нет.</p>
+		</script>
+		<!-- tpl-task-row-small: task-row; поля: employee. -->
+		<script type="text/html" id="tpl-task-row-small">
+			<small>{{employee}}</small>
+		</script>
+		<!-- tpl-task-row-label: task-row; поля: taskId, checked, disabled, title, employee. -->
+		<script type="text/html" id="tpl-task-row-label">
+			<label class="task-row">
+				<input type="checkbox" data-task="{{taskId}}" {{checked}} {{disabled}} />
+				<span class="task-text">
+					<span>{{title}}</span>
+					{{employee}}
+				</span>
+			</label>
+		</script>
+		<!-- tpl-section-div: section; поля: title, tasks. -->
+		<script type="text/html" id="tpl-section-div">
+			<div class="task-shift">
+				<h4>{{title}}</h4>
+				{{tasks}}
+			</div>
+		</script>
+		<!-- tpl-shift-sections-p: shift-sections; поля: нет. -->
+		<script type="text/html" id="tpl-shift-sections-p">
+			<p class="hint">Задач пока нет.</p>
+		</script>
+		<!-- tpl-load-tasks-h3: load-tasks; поля: myTasks, colleagueCount, colleagueTasks. -->
+		<script type="text/html" id="tpl-load-tasks-h3">
+			<h3>Мои задачи</h3>
+			{{myTasks}}
+			<details class="colleague-tasks task-group" data-disclosure="colleagues">
+				<summary>
+					Задачи коллег
+					<span class="count-badge">{{colleagueCount}}</span>
+				</summary>
+				{{colleagueTasks}}
+			</details>
+		</script>
+		<!-- tpl-update-task-employees-option: update-task-employees; поля: нет. -->
+		<script type="text/html" id="tpl-update-task-employees-option">
+			<option value="">Нет сотрудников на смене</option>
+		</script>
+		<!-- tpl-update-task-employees-option-2: update-task-employees; поля: userId, name. -->
+		<script type="text/html" id="tpl-update-task-employees-option-2">
+			<option value="{{userId}}">{{name}}</option>
+		</script>
+		<!-- tpl-render-div: render; поля: title, morningDays, eveningDays, status, editId, toggleId, toggleLabel, archiveId. -->
+		<script type="text/html" id="tpl-render-div">
+			<div class="request-row">
+				<div>
+					<strong>{{title}}</strong>
+					<p>Утро: {{morningDays}} · Вечер: {{eveningDays}} · {{status}}</p>
+				</div>
+				<button type="button" class="secondary" data-action="edit" data-id="{{editId}}">
+					Изменить
+				</button>
+				<button type="button" class="secondary" data-action="toggle" data-id="{{toggleId}}">
+					{{toggleLabel}}
+				</button>
+				<button
+					type="button"
+					class="secondary"
+					data-action="archive"
+					data-id="{{archiveId}}"
+				>
+					Удалить
+				</button>
+			</div>
+		</script>
+		<!-- tpl-render-p: render; поля: нет. -->
+		<script type="text/html" id="tpl-render-p">
+			<p>Задач нет.</p>
+		</script>
+		<!-- tpl-render-button: render; поля: taskId. -->
+		<script type="text/html" id="tpl-render-button">
+			<button type="button" class="secondary" data-history-reassign="{{taskId}}">
+				Переназначить
+			</button>
+			<div data-history-editor hidden></div>
+		</script>
+		<!-- tpl-render-div-2: render; поля: title, name, shift, status, editor. -->
+		<script type="text/html" id="tpl-render-div-2">
+			<div class="request-row">
+				<div>
+					<strong>{{title}}</strong>
+					<p>{{name}} · {{shift}} · {{status}}</p>
+
+					{{editor}}
+				</div>
+			</div>
+		</script>
+		<!-- tpl-render-p-2: render; поля: нет. -->
+		<script type="text/html" id="tpl-render-p-2">
+			<p>Задач по выбранным фильтрам нет.</p>
+		</script>
+		<!-- tpl-render-option: render; поля: userId, name. -->
+		<script type="text/html" id="tpl-render-option">
+			<option value="{{userId}}">{{name}}</option>
+		</script>
+		<!-- tpl-render-label: render; поля: candidates. -->
+		<script type="text/html" id="tpl-render-label">
+			<label>
+				Новый исполнитель
+				<select data-new-assignee>
+					<option value="">Выберите сотрудника</option>
+					{{candidates}}
+				</select>
+			</label>
+			<button type="button" data-save-assignee>Сохранить</button>
+			<button type="button" class="secondary" data-cancel-assignee>Отмена</button>
+			<p data-assignee-message role="status"></p>
+		</script>
+		<!-- tpl-populate-periods-option: populate-periods; поля: periodId, name. -->
+		<script type="text/html" id="tpl-populate-periods-option">
+			<option value="{{periodId}}">{{name}}</option>
+		</script>
+		<!-- tpl-populate-periods-option-2: populate-periods; поля: нет. -->
+		<script type="text/html" id="tpl-populate-periods-option-2">
+			<option value="">Нет периода</option>
+		</script>
+		<!-- tpl-load-option: load; поля: userId, name. -->
+		<script type="text/html" id="tpl-load-option">
+			<option value="{{userId}}">{{name}}</option>
+		</script>
+		<!-- tpl-load-option-2: load; поля: options. -->
+		<script type="text/html" id="tpl-load-option-2">
+			<option value="">Все</option>
+			{{options}}
+		</script>
+		<!-- tpl-list-p: list; поля: нет. -->
+		<script type="text/html" id="tpl-list-p">
+			<p>Нет назначений</p>
+		</script>
+		<!-- tpl-list-li: list; поля: name, zone. -->
+		<script type="text/html" id="tpl-list-li">
+			<li class="crew-card">
+				<strong>{{name}}</strong>
+				<small class="zone-details">{{zone}}</small>
+			</li>
+		</script>
+		<!-- tpl-list-ul: list; поля: employees. -->
+		<script type="text/html" id="tpl-list-ul">
+			<ul class="crew-grid">
+				{{employees}}
+			</ul>
+		</script>
+		<!-- tpl-full-shift-block-li: full-shift-block; поля: name, zone. -->
+		<script type="text/html" id="tpl-full-shift-block-li">
+			<li class="crew-card">
+				<strong>{{name}}</strong>
+				<small class="zone-details">{{zone}}</small>
+			</li>
+		</script>
+		<!-- tpl-full-shift-block-div: full-shift-block; поля: heading, employees. -->
+		<script type="text/html" id="tpl-full-shift-block-div">
+			<section class="day-center">
+				<h3>{{heading}}</h3>
+				<ul class="crew-grid">
+					{{employees}}
+				</ul>
+			</section>
+		</script>
+		<!-- tpl-render-today-div: render-today; поля: morning, evening, fullDay, dayShift. -->
+		<script type="text/html" id="tpl-render-today-div">
+			<div class="today-columns">
+				<div>
+					<h3>Утро</h3>
+					{{morning}}
+				</div>
+				<div>
+					<h3>Вечер</h3>
+					{{evening}}
+				</div>
+			</div>
+			{{fullDay}} {{dayShift}}
+		</script>
+		<script type="text/html" id="tpl-task-group">
+			<details class="task-group" data-disclosure="{{key}}" {{open}}>
+				<summary>
+					<span>{{title}}</span>
+					<span class="count-badge">{{count}}</span>
+				</summary>
+				<div class="task-group-content">{{content}}</div>
+			</details>
+		</script>
+		<script type="text/html" id="tpl-task-summary-row">
+			<div class="task-row">
+				<div class="task-text">
+					<strong>{{title}}</strong>
+					<small>{{name}}</small>
+				</div>
+			</div>
+		</script>
+		<script type="text/html" id="tpl-zone-calendar-day">
+			<button
+				type="button"
+				class="calendar-day {{classes}}"
+				data-zone-view-day="{{date}}"
+				aria-label="{{label}}"
+				aria-pressed="{{selected}}"
+			>
+				{{number}}
+				<span>{{marker}}</span>
+			</button>
+		</script>
+		<script type="text/html" id="tpl-zone-calendar-gap">
+			<span class="calendar-gap" aria-hidden="true"></span>
+		</script>
+		<script type="text/html" id="tpl-zone-roster-group">
+			<section class="zone-roster-group">
+				<h3>{{title}}</h3>
+				<ul class="crew-grid">
+					{{people}}
+				</ul>
+			</section>
+		</script>
+		<script type="text/html" id="tpl-crew-card">
+			<li class="crew-card">
+				<strong>{{name}}</strong>
+				<span class="crew-shift">{{shift}}</span>
+				<small class="zone-details">{{zone}}</small>
+			</li>
+		</script>
+		<script type="text/html" id="tpl-zone-lines">
+			<span class="zone-line">
+				<b>Утро</b>
+				{{morning}}
+			</span>
+			<span class="zone-line">
+				<b>Вечер</b>
+				{{evening}}
+			</span>
+		</script>
+		<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+		<script src="config.js"></script>
+		<script src="script.js"></script>
+	</body>
+</html>
