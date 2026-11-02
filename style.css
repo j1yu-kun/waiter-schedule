@@ -1,95 +1,1180 @@
-:root{font-family:Inter,system-ui,sans-serif;color:#25352f;background:#f5f6f1}*{box-sizing:border-box}body{margin:0}header{height:70px;background:#fff;border-bottom:1px solid #e5ebe3;display:flex;align-items:center;justify-content:space-between;padding:0 max(5%,calc((100% - 1100px)/2))}.brand{display:flex;align-items:center;gap:10px;font-size:23px}.brand span{font-size:15px;font-weight:800;letter-spacing:.1em}.brand small{display:block;color:#9aa9a0;font-size:9px}main{max-width:1100px;margin:auto;padding:34px 20px}.hero,.row{display:flex;align-items:end;gap:15px;justify-content:space-between;flex-wrap:wrap}.hero h1,h1{font-size:36px;letter-spacing:-.04em;margin:8px 0}h2{font-size:21px;margin:0 0 8px}p{color:#73837a;line-height:1.5}.tag{font-size:11px;letter-spacing:.13em;font-weight:800;color:#8aa08b}.card{background:white;border:1px solid #e6ebe4;border-radius:18px;padding:25px;margin:20px 0;box-shadow:0 6px 25px #273a1a08}.narrow{max-width:440px;margin:70px auto}label{display:block;font-size:13px;font-weight:700;color:#51645a;margin:14px 0}input,select{display:block;width:100%;padding:12px;margin-top:6px;border:1px solid #dce5db;border-radius:9px;font:inherit;background:white;color:#25352f}button{background:#355f49;color:white;border:0;padding:12px 17px;border-radius:9px;font-weight:700;cursor:pointer}button:hover{filter:brightness(.93)}button:disabled{opacity:.5;cursor:not-allowed}.secondary{background:#eff3ed;color:#355f49}nav{display:flex;gap:8px;border-bottom:1px solid #dce6da;margin-top:26px;overflow:auto}nav button{white-space:nowrap;background:transparent;color:#78877c;border-radius:0;padding:15px}nav button.active{color:#315f46;border-bottom:3px solid #557d5d}.hint{font-size:13px}.notice{padding:13px;background:#fff4db;border-radius:10px;margin-bottom:12px}.day{display:grid;grid-template-columns:150px repeat(4,auto);gap:8px;align-items:center;padding:10px 0;border-bottom:1px solid #eef1ec}.day label{margin:0;font-weight:500}.day input{display:inline;width:auto;margin:0 5px 0 0}.scroll{overflow:auto}table{border-collapse:collapse;font-size:13px;min-width:100%}th,td{padding:10px;border-bottom:1px solid #ebefea;text-align:center;white-space:nowrap}th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:white}.shift{padding:6px;color:#355f49;background:#edf4ed;min-width:40px}.warning{color:#a14936;background:#fff0e7;padding:12px;border-radius:10px}#draftInfo:empty{display:none}@media(max-width:600px){main{padding:20px 14px}.day{grid-template-columns:1fr 1fr}.day strong{grid-column:1/-1}.card{padding:18px}h1{font-size:30px}}
-
-.period-picker{max-width:420px;margin-top:24px}.my-shifts{list-style:none;padding:0;margin:0;max-width:420px}.my-shifts li{display:flex;justify-content:space-between;padding:12px;border-bottom:1px solid #e6ebe4}.my-shifts span{background:#edf4ed;color:#355f49;padding:5px 12px;border-radius:6px}
-/* Телефоны: крупные элементы управления и горизонтальная прокрутка таблицы. */
-@media(max-width:600px){
- header{height:60px;padding:0 14px;gap:12px}.brand{font-size:20px}.brand span{font-size:13px}#account{font-size:12px;max-width:45%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
- .hero{align-items:center}.hero p{font-size:14px}.hero .secondary{min-height:44px}
- input,select{font-size:16px;min-height:46px}button{min-height:44px}nav{margin-top:15px}nav button{padding:12px 14px;flex-shrink:0}
- .period-picker{max-width:none}.day{grid-template-columns:1fr 1fr;gap:6px 10px;padding:14px 0}.day label{min-height:44px;display:flex;align-items:center;padding:8px 10px;border:1px solid #e4ebe2;border-radius:9px;font-size:14px}.day input{min-height:0;width:19px;height:19px;margin:0 9px 0 0;accent-color:#355f49}
- .scroll{max-width:100%;-webkit-overflow-scrolling:touch}th,td{padding:9px 8px}th:first-child,td:first-child{z-index:1;min-width:135px;white-space:normal}#scheduleGrid::before,#draftGrid:not(:empty)::before{content:'Листайте таблицу в стороны ← →';display:block;font-size:12px;color:#73837a;margin:5px 0 12px}
- .row label{flex:1 1 100%}.row button{flex:1 1 auto}.narrow{margin:30px auto}
+/* Детский сад 2.0 — стили. Базовые правила заданы один раз;
+адаптивные переопределения сгруппированы в конце.
+Не добавляйте исправления в конец файла: меняйте правило нужного компонента. */
+/* 01. Базовые цвета, шрифт и размеры */
+:root {
+	font-family: Inter, system-ui, sans-serif;
+	color: #25352f;
+	background: #f5f6f1;
 }
-
-/* Дашборд: две плитки рядом, на телефонах — друг под другом. */
-[hidden]{display:none!important}.toolbar{display:flex;gap:10px;margin:18px 0}.dashboard-grid{display:grid;grid-template-columns:minmax(230px, 1fr) minmax(0, 2fr);gap:18px;align-items:start}.dashboard-grid .card{margin:0;min-width:0}.availability-card{margin-bottom:18px}.schedule-scroll{max-height:480px;overflow:auto;overscroll-behavior:contain}.today-columns{display:grid;grid-template-columns:1fr 1fr;gap:16px}.today-columns h3,.day-center h3{font-size:14px;color:#73837a;margin:12px 0}.today-columns ul,.day-center ul{list-style:none;padding:0;margin:0}.today-columns li,.day-center li{padding:8px 0;border-bottom:1px solid #edf1ec;overflow-wrap:anywhere}.day-center{text-align:center;margin-top:20px}.mine-card{border-top:1px solid #e6ebe4;margin-top:18px;padding-top:14px}.mine-card summary{cursor:pointer;font-weight:700;color:#355f49}.schedule-scroll th:first-child,.schedule-scroll td:first-child{z-index:1}.today-empty{color:#73837a;font-size:14px}@media(max-width:750px){.dashboard-grid{grid-template-columns:minmax(0,1fr)}.dashboard-grid .card{width:100%}.schedule-scroll{max-height:min(65vh,480px);-webkit-overflow-scrolling:touch}.schedule-scroll th:first-child,.schedule-scroll td:first-child{min-width:125px}.toolbar button{min-height:44px}}
-
-/* Сворачиваемая форма пожеланий */
-.availability-details summary{list-style:none;cursor:pointer;display:flex;align-items:center;justify-content:space-between;gap:14px;font-size:20px;font-weight:750}.availability-details summary::-webkit-details-marker{display:none}.availability-details summary:focus-visible{outline:3px solid #87ab8e;outline-offset:5px}.details-action{font-size:13px;font-weight:700;color:#355f49;background:#eff3ed;border-radius:9px;padding:11px 14px;white-space:nowrap}.availability-details[open] .details-action{font-size:0}.availability-details[open] .details-action:after{content:'Свернуть';font-size:13px}.day{grid-template-columns:150px repeat(3,minmax(0,1fr))}@media(max-width:600px){.availability-details summary{font-size:17px}.day{grid-template-columns:1fr 1fr}.day strong{grid-column:1/-1}}
-
-/* Личный график */
-.personal-card{margin:18px 0}.personal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px}.personal-day{aspect-ratio:1;min-width:0;border:1px solid #e5ebe3;border-radius:14px;background:#f7f8f4;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;padding:6px;text-align:center}.personal-date{font-size:12px;color:#73837a;line-height:1.2}.personal-day strong{font-size:20px;color:#718078}.personal-day.has-shift{background:#eaf3e9;border-color:#d6e5d5}.personal-day.has-shift strong{color:#315f46}@media(max-width:750px){.personal-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}.personal-date{font-size:11px}.personal-day strong{font-size:18px}}@media(max-width:350px){.personal-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
-
-.personal-day.is-past,.personal-day.is-past.has-shift{background:#f0f1ef;border-color:#e2e4e1}.personal-day.is-past .personal-date,.personal-day.is-past strong{color:#9b9f9a}
-
-.personal-day.is-today{background:#dcf0df;border:2px solid #37754c}.personal-day.is-next{background:#fff3dc;border:2px solid #c99540}.personal-day.is-today strong,.personal-day.is-next strong{color:#243c2d;font-weight:800}.personal-marker{font-size:10px;font-weight:800;color:#49624f;line-height:1}.personal-day.is-next .personal-marker{color:#8c621f}@media(max-width:400px){.personal-marker{font-size:9px}.personal-day{gap:5px}}
-
-/* Ненавязчивый отклик и мягкое притягивание на мобильных */
-.toast{position:fixed;z-index:1000;bottom:24px;left:50%;transform:translateX(-50%);max-width:min(92vw,540px);padding:13px 18px;border-radius:12px;background:#263f32;color:white;box-shadow:0 8px 28px #12291e40;text-align:center;font-size:14px}button:disabled{opacity:.5;cursor:not-allowed}.availability-details[open] .details-action:after{content:'Свернуть'}@media(max-width:750px){.toast{bottom:18px}}
-
-.dashboard-grid{grid-template-columns:minmax(230px,1fr) minmax(0,2fr);grid-template-areas:'personal schedule' 'today schedule';gap:18px}.personal-card{grid-area:personal}.today-card{grid-area:today}.schedule-card{grid-area:schedule}.shift-badge{display:inline-block;padding:5px 9px;border-radius:7px;font-weight:800;color:#233b2c}.shift-morning{background:#fff0c1}.shift-evening{background:#dceafb}.shift-full{background:#d9ecda}.shift-day{background:#ffe1ca}@media(max-width:750px){.dashboard-grid{grid-template-columns:minmax(0,1fr);grid-template-areas:'personal' 'today' 'schedule'}}
-
-@media(min-width:751px){.personal-grid{grid-template-columns:repeat(auto-fit,minmax(80px,1fr))}}
-.request-row{display:flex;gap:16px;align-items:center;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid #e6ebe4}.request-row>div{flex:1 1 180px}.request-row p{margin:4px 0;font-size:13px;overflow-wrap:anywhere}.request-row label{min-width:145px;margin:0}#showRegister{margin-top:12px}#registerForm button{margin-top:8px}
-
-@media (min-width: 751px) { .dashboard-grid:has(.personal-card[hidden]) { grid-template-areas: "today schedule"; } }
-
-/* Закрепляем строку с датами в общем графике */
+* {
+	box-sizing: border-box;
+}
+body {
+	margin: 0;
+}
+/* 02. Шапка и фирменный блок */
+header {
+	height: 70px;
+	background: #fff;
+	border-bottom: 1px solid #e5ebe3;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 0 max(5%, calc((100% - 1100px) / 2));
+}
+.brand {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 23px;
+}
+.brand span {
+	font-size: 15px;
+	font-weight: 800;
+	letter-spacing: 0.1em;
+}
+.brand small {
+	display: block;
+	color: #9aa9a0;
+	font-size: 9px;
+}
+/* 03. Контейнер страницы и типографика */
+main {
+	max-width: 1100px;
+	margin: auto;
+	padding: 24px 20px;
+}
+.hero,
+.row {
+	display: flex;
+	align-items: end;
+	gap: 15px;
+	justify-content: space-between;
+	flex-wrap: wrap;
+}
+.hero h1,
+h1 {
+	font-size: 36px;
+	letter-spacing: -0.04em;
+	margin: 8px 0;
+}
+h2 {
+	font-size: 21px;
+	margin: 0 0 8px;
+}
+p {
+	color: #73837a;
+	line-height: 1.5;
+}
+.tag {
+	font-size: 11px;
+	letter-spacing: 0.13em;
+	font-weight: 800;
+	color: #8aa08b;
+}
+/* 04. Карточки, формы и кнопки */
+.card {
+	background: white;
+	border: 1px solid #e6ebe4;
+	border-radius: 18px;
+	padding: 22px;
+	margin: 20px 0;
+	box-shadow: 0 6px 25px #273a1a08;
+}
+.narrow {
+	max-width: 440px;
+	margin: 70px auto;
+}
+label {
+	display: block;
+	font-size: 13px;
+	font-weight: 700;
+	color: #51645a;
+	margin: 14px 0;
+}
+input,
+select {
+	display: block;
+	width: 100%;
+	padding: 12px;
+	margin-top: 6px;
+	border: 1px solid #dce5db;
+	border-radius: 9px;
+	font: inherit;
+	background: white;
+	color: #25352f;
+}
+button {
+	background: #355f49;
+	color: white;
+	border: 0;
+	padding: 12px 17px;
+	border-radius: 9px;
+	font-weight: 700;
+	cursor: pointer;
+}
+button:hover {
+	filter: brightness(0.93);
+}
+.secondary {
+	background: #eff3ed;
+	color: #355f49;
+}
+.hint {
+	font-size: 13px;
+}
+.notice {
+	padding: 13px;
+	background: #fff4db;
+	border-radius: 10px;
+	margin-bottom: 12px;
+}
+/* 05. Форма пожеланий: день и варианты смен */
+.day {
+	display: grid;
+	grid-template-columns: 150px repeat(3, minmax(0, 1fr));
+	gap: 8px;
+	align-items: center;
+	padding: 10px 0;
+	border-bottom: 1px solid #eef1ec;
+}
+.day label {
+	margin: 0;
+	font-weight: 500;
+}
+.day input {
+	display: inline;
+	width: auto;
+	margin: 0 5px 0 0;
+}
+/* 06. Таблицы и обозначения смен */
+.scroll {
+	overflow: auto;
+}
+table {
+	border-collapse: collapse;
+	font-size: 13px;
+	min-width: 100%;
+}
+th,
+td {
+	padding: 10px;
+	border-bottom: 1px solid #ebefea;
+	text-align: center;
+	white-space: nowrap;
+}
+th:first-child,
+td:first-child {
+	text-align: left;
+	position: sticky;
+	left: 0;
+	background: white;
+}
+.shift {
+	padding: 6px;
+	color: #355f49;
+	background: #edf4ed;
+	min-width: 40px;
+}
+.warning {
+	color: #a14936;
+	background: #fff0e7;
+	padding: 12px;
+	border-radius: 10px;
+}
+#draftInfo:empty {
+	display: none;
+}
+/* 07. Выбор периода */
+.period-picker {
+	max-width: none;
+	margin: 0;
+}
+/* 08. Видимость и сетка главной страницы */
+[hidden] {
+	display: none !important;
+}
+.toolbar {
+	display: flex;
+	gap: 10px;
+	margin: 18px 0;
+}
+.dashboard-grid {
+	display: grid;
+	gap: 18px;
+	align-items: start;
+	grid-template-columns: minmax(230px, 1fr) minmax(0, 2fr);
+}
+.dashboard-grid .card {
+	margin: 0;
+	min-width: 0;
+}
+.availability-card {
+	margin-bottom: 18px;
+}
+.schedule-scroll {
+	max-height: 480px;
+	overflow: auto;
+	overscroll-behavior: contain;
+}
+/* 09. Состав смены и подписи зон */
+.today-columns {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 12px;
+}
+.today-columns h3,
+.day-center h3 {
+	font-size: 14px;
+	color: #73837a;
+	margin: 12px 0;
+}
+.today-columns ul,
+.day-center ul {
+	list-style: none;
+	padding: 0;
+	margin: 0;
+}
+.today-columns li,
+.day-center li {
+	padding: 12px;
+	border: 1px solid #e5ebe3;
+	border-radius: 12px;
+	background: #f7f9f5;
+	overflow-wrap: anywhere;
+}
+.day-center {
+	text-align: left;
+	margin-top: 16px;
+}
+.schedule-scroll th:first-child,
+.schedule-scroll td:first-child {
+	z-index: 1;
+}
+.today-empty {
+	color: #73837a;
+	font-size: 14px;
+}
+/* 10. Раскрываемая форма пожеланий */
+.availability-details summary {
+	list-style: none;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 14px;
+	font-size: 20px;
+	font-weight: 750;
+}
+.availability-details summary::-webkit-details-marker {
+	display: none;
+}
+.availability-details summary:focus-visible {
+	outline: 3px solid #87ab8e;
+	outline-offset: 5px;
+}
+.details-action {
+	font-size: 13px;
+	font-weight: 700;
+	color: #355f49;
+	background: #eff3ed;
+	border-radius: 9px;
+	padding: 11px 14px;
+	white-space: nowrap;
+}
+.availability-details[open] .details-action {
+	font-size: 0;
+}
+.availability-details[open] .details-action:after {
+	font-size: 13px;
+	content: 'Свернуть';
+}
+/* 11. Личный календарь: прошедшие, текущая и ближайшая смены */
+.personal-card {
+	margin: 18px 0;
+}
+.personal-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 10px;
+}
+.personal-day {
+	aspect-ratio: 1;
+	min-width: 0;
+	border: 1px solid #e5ebe3;
+	border-radius: 14px;
+	background: #f7f8f4;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	gap: 8px;
+	padding: 6px;
+	text-align: center;
+}
+.personal-date {
+	font-size: 12px;
+	color: #73837a;
+	line-height: 1.2;
+}
+.personal-day strong {
+	font-size: 20px;
+	color: #718078;
+}
+.personal-day.has-shift {
+	background: #eaf3e9;
+	border-color: #d6e5d5;
+}
+.personal-day.has-shift strong {
+	color: #315f46;
+}
+.personal-day.is-past,
+.personal-day.is-past.has-shift {
+	background: #f0f1ef;
+	border-color: #e2e4e1;
+}
+.personal-day.is-past .personal-date,
+.personal-day.is-past strong {
+	color: #9b9f9a;
+}
+.personal-day.is-today {
+	background: #dcf0df;
+	border: 2px solid #37754c;
+}
+.personal-day.is-next {
+	background: #fff3dc;
+	border: 2px solid #c99540;
+}
+.personal-day.is-today strong,
+.personal-day.is-next strong {
+	color: #243c2d;
+	font-weight: 800;
+}
+.personal-marker {
+	font-size: 10px;
+	font-weight: 800;
+	color: #49624f;
+	line-height: 1;
+}
+.personal-day.is-next .personal-marker {
+	color: #8c621f;
+}
+/* 12. Всплывающие уведомления */
+.toast {
+	position: fixed;
+	z-index: 1000;
+	bottom: 24px;
+	left: 50%;
+	transform: translateX(-50%);
+	max-width: min(92vw, 540px);
+	padding: 13px 18px;
+	border-radius: 12px;
+	background: #263f32;
+	color: white;
+	box-shadow: 0 8px 28px #12291e40;
+	text-align: center;
+	font-size: 14px;
+}
+button:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}
+/* 13. Цвета смен: утро, вечер, полный день, дневная */
+.shift-badge {
+	display: inline-block;
+	padding: 5px 9px;
+	border-radius: 7px;
+	font-weight: 800;
+	color: #233b2c;
+}
+.shift-morning {
+	background: #fff0c1;
+}
+.shift-evening {
+	background: #dceafb;
+}
+.shift-full {
+	background: #d9ecda;
+}
+.shift-day {
+	background: #ffe1ca;
+}
+/* 14. Строки административных списков */
+.request-row {
+	display: flex;
+	gap: 16px;
+	align-items: center;
+	flex-wrap: wrap;
+	padding: 12px 0;
+	border-bottom: 1px solid #e6ebe4;
+}
+.request-row > div {
+	flex: 1 1 180px;
+}
+.request-row p {
+	margin: 4px 0;
+	font-size: 13px;
+	overflow-wrap: anywhere;
+}
+.request-row label {
+	min-width: 145px;
+	margin: 0;
+}
+#showRegister {
+	margin-top: 12px;
+}
+#registerForm button {
+	margin-top: 8px;
+}
+/* 15. Закреплённые заголовки опубликованного графика */
 .schedule-scroll thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: white;
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: white;
 }
-
-/* Ячейка «Сотрудник» остаётся поверх строк и дат */
 .schedule-scroll thead th:first-child {
-  left: 0;
-  z-index: 3;
+	left: 0;
+	z-index: 3;
 }
-
-/* Таблица черновика прокручивается внутри своего блока */
+/* 16. Черновик: прокрутка, закреплённые даты и итоги */
 #draftGrid {
-  max-height: 65vh;
-  overflow: auto;
+	max-height: 65vh;
+	overflow: auto;
 }
-
-/* Даты закреплены сверху */
 #draftGrid thead th {
-  position: sticky;
-  top: 0;
-  z-index: 2;
-  background: #fff;
+	position: sticky;
+	top: 0;
+	z-index: 2;
+	background: #fff;
 }
-
-/* Обе итоговые строки одинаковой высоты */
-#draftGrid tbody tr:nth-last-child(-n+2) th,
-#draftGrid tbody tr:nth-last-child(-n+2) td {
-  height: 48px;
-  box-sizing: border-box;
-  background: #fff;
+#draftGrid tbody tr:nth-last-child(-n + 2) th,
+#draftGrid tbody tr:nth-last-child(-n + 2) td {
+	height: 48px;
+	box-sizing: border-box;
+	background: #fff;
 }
-
-/* Вечер закреплён у нижнего края */
 #draftGrid tbody tr:last-child th,
 #draftGrid tbody tr:last-child td {
-  position: sticky;
-  bottom: 0;
-  z-index: 2;
+	position: sticky;
+	bottom: 0;
+	z-index: 2;
 }
-
-/* Утро закреплено над вечерней строкой */
 #draftGrid tbody tr:nth-last-child(2) th,
 #draftGrid tbody tr:nth-last-child(2) td {
-  position: sticky;
-  bottom: 48px;
-  z-index: 2;
+	position: sticky;
+	bottom: 48px;
+	z-index: 2;
 }
-
-/* Угол таблицы и названия итоговых строк */
 #draftGrid thead th:first-child,
 #draftGrid tbody tr:nth-last-child(2) th:first-child,
 #draftGrid tbody tr:last-child th:first-child {
-  left: 0;
-  z-index: 3;
+	left: 0;
+	z-index: 3;
+}
+/* 17. Независимая левая колонка главной */
+.dashboard-left {
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	min-width: 0;
+}
+.dashboard-left .card {
+	width: 100%;
+	margin: 0;
+}
+/* 18. Задачи: чекбоксы, смены, задачи коллег */
+#tasksCard h3 {
+	margin: 18px 0 8px;
+}
+.task-shift h4 {
+	margin: 14px 0 6px;
+	color: #73837a;
+	font-size: 13px;
+}
+.task-row {
+	display: flex;
+	align-items: flex-start;
+	gap: 10px;
+	margin: 0;
+	padding: 9px 0;
+	border-bottom: 1px solid #edf1ec;
+	font-size: 14px;
+	font-weight: 500;
+	line-height: 1.4;
+}
+.task-row input[type='checkbox'] {
+	flex: 0 0 18px;
+	width: 18px;
+	height: 18px;
+	min-height: 0;
+	margin: 1px 0 0;
+	padding: 0;
+	accent-color: #355f49;
+}
+.task-text {
+	display: flex;
+	flex-direction: column;
+	gap: 3px;
+	min-width: 0;
+}
+.task-text small {
+	color: #73837a;
+	font-size: 12px;
+}
+.colleague-tasks {
+	margin-top: 20px;
+	padding-top: 14px;
+	border-top: 1px solid #e6ebe4;
+}
+.colleague-tasks summary {
+	cursor: pointer;
+	color: #355f49;
+	font-weight: 700;
+}
+/* 19. Зоны обслуживания и чекбоксы справочника */
+.zone-details {
+	display: block;
+	margin-top: 5px;
+	font-size: 12px;
+	line-height: 1.5;
+	color: #65786b;
+}
+#taskCatalog .weekday-checkbox {
+	width: 18px;
+	height: 18px;
+	min-height: 0;
+	margin: 0;
+	accent-color: #355f49;
+}
+/* 20. Компактная навигация и выбор периода */
+button,
+input,
+select,
+summary {
+	-webkit-tap-highlight-color: transparent;
+}
+button:focus-visible,
+summary:focus-visible,
+input:focus-visible,
+select:focus-visible {
+	outline: 3px solid #8cb29b;
+	outline-offset: 3px;
+}
+.main-tabs button[aria-pressed='true'] {
+	background: #355f49;
+	color: white;
+}
+.admin-tabs {
+	display: flex;
+	gap: 6px;
+	padding: 6px;
+	background: #e9eee7;
+	border-radius: 14px;
+	margin: 18px 0;
+}
+.admin-tabs button {
+	flex: 1;
+	color: #54695b;
+	background: transparent;
+	min-height: 44px;
+}
+.admin-tabs button[aria-selected='true'] {
+	background: white;
+	color: #254a35;
+	box-shadow: 0 2px 8px #25352f12;
+}
+.admin-period-bar {
+	display: flex;
+	align-items: end;
+	gap: 16px;
+	margin: 16px 0;
+	flex-wrap: wrap;
+}
+.admin-period-bar label {
+	margin: 0;
+	flex: 1 1 280px;
+}
+.admin-period-bar > span {
+	flex: 1 1 200px;
+	padding-bottom: 12px;
+	color: #73837a;
+}
+.period-navigation {
+	display: flex;
+	align-items: end;
+	gap: 8px;
+	margin: 16px 0;
+}
+.period-field {
+	flex: 1;
+	min-width: 0;
+}
+.period-field select {
+	text-overflow: ellipsis;
+}
+.icon-button {
+	width: 44px;
+	height: 44px;
+	flex: 0 0 44px;
+	padding: 8px;
+	font-size: 20px;
+}
+#versionLabel {
+	font-weight: 500;
+}
+#publishedInfo {
+	font-size: 12px;
+	margin: 8px 0 12px;
+}
+.section-heading,
+.dialog-heading {
+	display: flex;
+	justify-content: space-between;
+	gap: 12px;
+	align-items: center;
+}
+/* 21. Раскрываемые разделы и счётчики */
+.accordion > summary,
+.task-group > summary {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	cursor: pointer;
+	list-style: none;
+	font-weight: 700;
+	min-height: 40px;
+	color: #304e3c;
+}
+.accordion > summary {
+	font-size: 17px;
+}
+.accordion > summary::-webkit-details-marker,
+.task-group > summary::-webkit-details-marker {
+	display: none;
+}
+.accordion > summary::before,
+.task-group > summary::before {
+	content: '›';
+	font-size: 22px;
+	transition: transform 160ms ease;
+}
+.accordion[open] > summary::before,
+.task-group[open] > summary::before {
+	transform: rotate(90deg);
+}
+.accordion-body {
+	padding-top: 14px;
+}
+.accordion.card {
+	padding: 14px 20px;
+}
+.count-badge {
+	display: inline-flex;
+	justify-content: center;
+	align-items: center;
+	min-width: 32px;
+	padding: 4px 8px;
+	border-radius: 8px;
+	background: #e9f0e6;
+	font-size: 12px;
+	white-space: nowrap;
+}
+.task-group {
+	margin: 10px 0;
+	border: 1px solid #e3eae0;
+	border-radius: 12px;
+	padding: 5px 12px;
+}
+.task-group > summary .count-badge {
+	margin-left: auto;
+}
+.task-group .task-group {
+	border: 0;
+	padding: 0;
+}
+.task-group .task-group > summary {
+	font-size: 13px;
+}
+.task-row:last-child {
+	border-bottom: 0;
+}
+.task-text,
+.task-text strong {
+	overflow-wrap: anywhere;
+}
+.task-group-content {
+	padding-bottom: 6px;
+}
+.task-group-content p {
+	font-size: 13px;
+}
+#draftInfo {
+	margin: 14px 0;
+}
+#draftInfo .warning > summary {
+	color: #a14936;
+}
+#draftInfo .warning .count-badge {
+	background: #f8dac7;
+}
+#registrationPanel {
+	margin-top: 0;
+}
+#registrationPanel > summary .count-badge {
+	margin-left: auto;
+}
+#admin .row {
+	justify-content: flex-start;
+	gap: 12px;
+}
+#admin .row label {
+	flex: 1 1 155px;
+	min-width: 0;
+}
+#admin .row button {
+	margin-bottom: 14px;
+}
+#taskHistory [data-h='list'] > div {
+	padding: 14px 0;
+	border-bottom: 1px solid #e6ebe4;
+}
+#taskHistory [data-h='list'] small {
+	display: block;
+	margin: 5px 0 8px;
+}
+/* 22. Тумблер летника: состояние обозначено цветом и текстом */
+.switch-control {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	position: relative;
+	cursor: pointer;
+	min-height: 44px;
+}
+.switch-control input {
+	position: absolute;
+	width: 48px;
+	height: 28px;
+	margin: 0;
+	opacity: 0;
+	min-height: 0;
+}
+.switch-track {
+	display: inline-block;
+	width: 48px;
+	height: 28px;
+	border-radius: 20px;
+	background: #b5beb7;
+	flex-shrink: 0;
+	transition: background 180ms ease;
+}
+.switch-track::before {
+	content: '';
+	display: block;
+	width: 22px;
+	height: 22px;
+	margin: 3px;
+	border-radius: 50%;
+	background: white;
+	box-shadow: 0 1px 4px #0002;
+	transition: transform 180ms ease;
+}
+.switch-control input:checked + .switch-track {
+	background: #3f8557;
+}
+.switch-control input:checked + .switch-track::before {
+	transform: translateX(20px);
+}
+.switch-control input:focus-visible + .switch-track {
+	outline: 3px solid #8cb29b;
+	outline-offset: 3px;
+}
+.switch-control input:disabled ~ span {
+	opacity: 0.5;
+	cursor: wait;
+}
+/* 23. Модальное окно справочника */
+dialog {
+	width: min(600px, calc(100% - 28px));
+	max-height: 90dvh;
+	overflow: auto;
+	border: 1px solid #dce5db;
+	border-radius: 18px;
+	padding: 24px;
+	color: #25352f;
+	box-shadow: 0 24px 80px #14291e40;
+}
+dialog::backdrop {
+	background: #18302480;
+}
+body:has(dialog[open]) {
+	overflow: hidden;
+}
+.dialog-heading h2 {
+	margin: 0;
+}
+#templateForm fieldset {
+	margin: 14px 0;
+	border: 1px solid #dce5db;
+	border-radius: 12px;
+	padding: 14px;
+}
+#templateForm legend {
+	font-size: 14px;
+	font-weight: 700;
+	padding: 0 5px;
+}
+.weekday-grid {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 6px;
+	margin-bottom: 12px;
+}
+.weekday-grid label {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 7px;
+	background: #f4f7f1;
+	border-radius: 8px;
+	padding: 10px 2px;
+	margin: 0;
+	cursor: pointer;
+}
+.weekday-grid label:has(input:checked) {
+	background: #deefdf;
+	color: #244a31;
+}
+#templateForm button {
+	margin: 3px 3px 3px 0;
+}
+.form-error {
+	background: #fff0e7;
+	padding: 10px;
+	border-radius: 8px;
+	color: #a14936;
+}
+/* 24. Плитки сотрудников и календарь зон */
+.crew-grid {
+	display: grid;
+	gap: 8px;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+.crew-card {
+	min-width: 0;
+	padding: 12px;
+	border: 1px solid #e5ebe3;
+	border-radius: 12px;
+	background: #f7f9f5;
+	overflow-wrap: anywhere;
+}
+.crew-card > strong {
+	font-size: 14px;
+	display: block;
+}
+.crew-shift {
+	display: inline-block;
+	font-size: 11px;
+	font-weight: 700;
+	color: #54755c;
+	margin-top: 4px;
+}
+.zone-line {
+	display: block;
+	margin-top: 5px;
+}
+.zone-line b {
+	font-size: 11px;
+	color: #4b6755;
+}
+.zone-roster-group {
+	margin-top: 18px;
+}
+.zone-roster-group h3 {
+	font-size: 14px;
+	color: #61776a;
+}
+.zone-roster-group .crew-grid {
+	grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+.calendar-toolbar {
+	display: flex;
+	gap: 8px;
+	align-items: center;
+	margin: 18px 0;
+	flex-wrap: wrap;
+}
+#zoneMonthTitle {
+	flex: 1;
+	text-align: center;
+	text-transform: capitalize;
+}
+.date-field {
+	max-width: 220px;
+}
+.calendar-weekdays,
+.zone-calendar {
+	display: grid;
+	grid-template-columns: repeat(7, minmax(0, 1fr));
+	gap: 6px;
+}
+.calendar-weekdays {
+	text-align: center;
+	color: #7a8b7d;
+	font-size: 12px;
+	margin-bottom: 8px;
+}
+.calendar-day {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	background: #f4f7f1;
+	border: 1px solid #e4ebe1;
+	color: #49634f;
+	min-height: 60px;
+	padding: 5px;
+}
+.calendar-day span {
+	font-size: 9px;
+	min-height: 11px;
+}
+.calendar-day.is-today {
+	border-color: #83ac8b;
+}
+.calendar-day[aria-pressed='true'] {
+	background: #355f49;
+	color: white;
+	border-color: #355f49;
+}
+#zoneDateTitle {
+	font-size: 18px;
+	margin-top: 24px;
+}
+@media (prefers-reduced-motion: reduce) {
+	.switch-track,
+	.switch-track::before,
+	.accordion > summary::before,
+	.task-group > summary::before {
+		transition: none;
+	}
+}
+
+/* Адаптивность: media (max-width: 600px) */
+@media (max-width: 600px) {
+	.admin-tabs {
+		gap: 2px;
+		padding: 4px;
+	}
+	.admin-tabs button {
+		padding: 10px 6px;
+		font-size: 12px;
+	}
+	.admin-period-bar {
+		gap: 5px;
+	}
+	.admin-period-bar > span {
+		padding: 0;
+		font-size: 12px;
+	}
+	.accordion.card {
+		padding: 12px 15px;
+	}
+	.accordion > summary {
+		font-size: 15px;
+	}
+	#admin .row label {
+		flex-basis: 100%;
+	}
+	#admin .row button {
+		margin-bottom: 0;
+	}
+	dialog {
+		padding: 18px;
+	}
+	#templateForm fieldset {
+		padding: 10px;
+	}
+	.weekday-grid {
+		gap: 3px;
+	}
+	.weekday-grid label {
+		font-size: 12px;
+	}
+	.calendar-day {
+		min-height: 44px;
+	}
+	.calendar-toolbar {
+		gap: 4px;
+	}
+	#zoneMonthTitle {
+		font-size: 14px;
+	}
+	.zone-roster-group .crew-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	main {
+		padding: 20px 14px;
+	}
+	.card {
+		padding: 18px;
+	}
+	h1 {
+		font-size: 30px;
+	}
+	header {
+		height: 60px;
+		padding: 0 14px;
+		gap: 12px;
+	}
+	.brand {
+		font-size: 20px;
+	}
+	.brand span {
+		font-size: 13px;
+	}
+	#account {
+		font-size: 12px;
+		max-width: 45%;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+	}
+	.hero {
+		align-items: center;
+	}
+	.hero p {
+		font-size: 14px;
+	}
+	.hero .secondary {
+		min-height: 44px;
+	}
+	input,
+	select {
+		font-size: 16px;
+		min-height: 46px;
+	}
+	button {
+		min-height: 44px;
+	}
+	.period-picker {
+		max-width: none;
+	}
+	.day {
+		gap: 6px 10px;
+		padding: 14px 0;
+		grid-template-columns: 1fr 1fr;
+	}
+	.day label {
+		min-height: 44px;
+		display: flex;
+		align-items: center;
+		padding: 8px 10px;
+		border: 1px solid #e4ebe2;
+		border-radius: 9px;
+		font-size: 14px;
+	}
+	.day input {
+		min-height: 0;
+		width: 19px;
+		height: 19px;
+		margin: 0 9px 0 0;
+		accent-color: #355f49;
+	}
+	.scroll {
+		max-width: 100%;
+		-webkit-overflow-scrolling: touch;
+	}
+	th,
+	td {
+		padding: 9px 8px;
+	}
+	th:first-child,
+	td:first-child {
+		z-index: 1;
+		min-width: 135px;
+		white-space: normal;
+	}
+	#scheduleGrid::before,
+	#draftGrid:not(:empty)::before {
+		content: 'Листайте таблицу в стороны ← →';
+		display: block;
+		font-size: 12px;
+		color: #73837a;
+		margin: 5px 0 12px;
+	}
+	.row label {
+		flex: 1 1 100%;
+	}
+	.row button {
+		flex: 1 1 auto;
+	}
+	.narrow {
+		margin: 30px auto;
+	}
+	.availability-details summary {
+		font-size: 17px;
+	}
+	.day strong {
+		grid-column: 1/-1;
+	}
+}
+/* Адаптивность: media (max-width: 750px) */
+@media (max-width: 750px) {
+	.dashboard-grid .card {
+		width: 100%;
+	}
+	.schedule-scroll {
+		max-height: min(65vh, 480px);
+		-webkit-overflow-scrolling: touch;
+	}
+	.schedule-scroll th:first-child,
+	.schedule-scroll td:first-child {
+		min-width: 125px;
+	}
+	.toolbar button {
+		min-height: 44px;
+	}
+	.personal-grid {
+		grid-template-columns: repeat(4, minmax(0, 1fr));
+		gap: 8px;
+	}
+	.personal-date {
+		font-size: 11px;
+	}
+	.personal-day strong {
+		font-size: 18px;
+	}
+	.toast {
+		bottom: 18px;
+	}
+	.dashboard-grid {
+		grid-template-columns: minmax(0, 1fr);
+	}
+}
+/* Адаптивность: media (max-width: 350px) */
+@media (max-width: 350px) {
+	.personal-grid {
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+	}
+}
+/* Адаптивность: media (max-width: 400px) */
+@media (max-width: 400px) {
+	.personal-marker {
+		font-size: 9px;
+	}
+	.personal-day {
+		gap: 5px;
+	}
+}
+/* Адаптивность: media (min-width: 751px) */
+@media (min-width: 751px) {
+	.personal-grid {
+		grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+	}
 }
