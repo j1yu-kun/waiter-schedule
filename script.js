@@ -396,13 +396,25 @@ async function loadPeriod() {
 			ascending: false,
 		}),
 	);
-	let allRows = check(
-		await db
-			.from('assignments')
-			.select('*')
-			.gte('day', dayAdd(p.start_date, -7))
-			.lte('day', dayAdd(p.end_date, 7)),
-	);
+	// Supabase/PostgREST may limit a single response to 1000 rows.
+	// Read every page in deterministic order so newer publications are not omitted.
+	let allRows = [];
+	const assignmentsPageSize = 500;
+	for (let offset = 0; ; offset += assignmentsPageSize) {
+		const page = check(
+			await db
+				.from('assignments')
+				.select('*')
+				.gte('day', dayAdd(p.start_date, -7))
+				.lte('day', dayAdd(p.end_date, 7))
+				.order('version_id', { ascending: true })
+				.order('day', { ascending: true })
+				.order('user_id', { ascending: true })
+				.range(offset, offset + assignmentsPageSize - 1),
+		);
+		allRows.push(...page);
+		if (page.length < assignmentsPageSize) break;
+	}
 	let latest = new Map();
 	versions.forEach((v) => {
 		if (!latest.has(v.period_id)) latest.set(v.period_id, v.id);
