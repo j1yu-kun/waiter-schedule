@@ -2534,4 +2534,31 @@ adminTabs.forEach((button, index) => {
 })();
 
 // Запуск приложения после настройки всех обработчиков.
+// Восстановление пароля: ссылка на экране входа, без изменения index.html.
+(() => {
+  const loginForm = $('#loginForm');
+  if (!loginForm) return;
+  const forgot = document.createElement('button');
+  forgot.type = 'button';
+  forgot.id = 'forgotPassword';
+  forgot.textContent = 'Забыли пароль?';
+  forgot.style.cssText = 'display:block;margin:12px auto;background:none;border:0;color:#176e58;text-decoration:underline;cursor:pointer;font:inherit';
+  loginForm.appendChild(forgot);
+  forgot.addEventListener('click', run(async () => {
+    if (!db) throw Error('Подключение к Supabase ещё не готово.');
+    const email = prompt('Введите email, указанный при регистрации:', $('#email')?.value || '');
+    if (email === null) return;
+    const address = email.trim();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) throw Error('Введите корректный email.');
+    forgot.disabled = true;
+    try {
+      const redirectTo = new URL('reset-password.html', window.location.href).href;
+      check(await db.auth.resetPasswordForEmail(address, { redirectTo }));
+      notice('Если такой email зарегистрирован, письмо для восстановления отправлено. Проверьте также папку «Спам».');
+    } finally {
+      forgot.disabled = false;
+    }
+  }));
+})();
+
 init().catch((e) => notice('Ошибка: ' + e.message));
